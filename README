@@ -1,0 +1,29 @@
+What is Skeltrack
+==================
+
+Skeltrack is a Free and Open Source Software library for tracking
+the human skeleton joints from depth images.
+
+It is implemented with GLib and uses plain mathematics to detect
+the human skeleton and although it does not use any database, it
+was inspired by Andreas Baak's paper:
+A Data-Driven Approach for Real-Time Full Body Pose Reconstruction
+from a Depth Camera
+
+
+How to use it
+==============
+
+Although it is device agnostic, a common way of using Skeltrack is
+to use it together with a Kinect device, for which we recommend the
+GFreenct library.
+
+Checking out the examples/test-kinect example app is a good start in
+order to learn how to use Skeltrack.
+
+
+Documentation
+==============
+
+You can find the documentation for Skeltrack here:
+http://people.igalia.com/jrocha/skeltrack/doc/latest/
