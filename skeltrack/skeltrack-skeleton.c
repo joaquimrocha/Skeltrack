@@ -21,10 +21,10 @@
  */
 
 /**
- * SECTION:skeltrack_skeleton
+ * SECTION:skeltrack-skeleton
  * @short_description: Object that tracks the joints in a human skeleton
  *
- * This object tries to detect different joints of the human skeleton.
+ * This object tries to detect joints of the human skeleton.
  *
  * To track the joints, first create an instance of #SkeltrackSkeleton using
  * skeltrack_skeleton_new() and then set a buffer from where the joints will
@@ -41,19 +41,19 @@
  * the given buffer's dimension is reduced before setting it. To do it,
  * simply choose the reduction factor and loop through the original buffer
  * (using this factor as a step) and set the reduced buffer's values accordingly.
- * The #SkeltrackSkeleton::dimension-reduction property holds this reduction
+ * The #SkeltrackSkeleton:dimension-reduction property holds this reduction
  * value and should be changed to the reduction factor used (alternatively you
  * can retrieve its default value and use it in the reduction, if it fits your
  * needs).
  *
  * The skeleton tracking uses a few heuristics that proved to work well for
  * tested cases but they can be tweaked by changing the following properties:
- * #SkeltrackSkeleton::graph-distance-threshold ,
- * #SkeltrackSkeleton::graph-minimum-number-nodes ,
- * #SkeltrackSkeleton::hands-minimum-distance ,
- * #SkeltrackSkeleton::shoulders-minimum-distance,
- * #SkeltrackSkeleton::shoulders-maximum-distance and
- * #SkeltrackSkeleton::shoulders-offset .
+ * #SkeltrackSkeleton:graph-distance-threshold ,
+ * #SkeltrackSkeleton:graph-minimum-number-nodes ,
+ * #SkeltrackSkeleton:hands-minimum-distance ,
+ * #SkeltrackSkeleton:shoulders-minimum-distance,
+ * #SkeltrackSkeleton:shoulders-maximum-distance and
+ * #SkeltrackSkeleton:shoulders-offset .
  **/
 #include <string.h>
 #include <math.h>
@@ -176,48 +176,66 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
 
   /* install properties */
 
+  /**
+   * SkeltrackSkeleton:dimension-reduction
+   *
+   * The value by which the dimension of the buffer was reduced
+   * (in case it was).
+   **/
   g_object_class_install_property (obj_class,
                          PROP_DIMENSION_REDUCTION,
                          g_param_spec_uint ("dimension-reduction",
                                             "Dimension reduction",
-                                            "The value by which the dimension "
-                                            "of the buffer was reduced (in case "
-                                            "it was)",
+                                            "The dimension reduction value",
                                             1,
                                             1024,
                                             DIMENSION_REDUCTION,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:graph-distance-threshold
+   *
+   * The value (in mm) for the distance threshold between each node and its
+   * neighbors. This means that a node in the graph will only be connected
+   * to another if they aren't farther apart then this value.
+   **/
   g_object_class_install_property (obj_class,
                          PROP_GRAPH_DISTANCE_THRESHOLD,
                          g_param_spec_uint ("graph-distance-threshold",
                                             "Graph's distance threshold",
-                                            "The value (in mm) for the distance "
-                                            "threshold between each node and its "
-                                            "neighbors. This means that a node "
-                                            "in the graph will only be connected "
-                                            "to another if they aren't farther "
-                                            "apart then this value.",
+                                            "The distance threshold between "
+                                            "each node.",
                                             1,
                                             G_MAXUINT16,
                                             GRAPH_DISTANCE_THRESHOLD,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:graph-minimum-number-nodes
+   *
+   * The minimum number of nodes each of the graph's components
+   * should have (when it is not fully connected).
+   **/
   g_object_class_install_property (obj_class,
                          PROP_GRAPH_MIN_NR_NODES,
                          g_param_spec_uint ("graph-minimum-number-nodes",
                                             "Graph's minimum number of nodes",
-                                            "The minimum number of nodes in "
-                                            "each of the graph's components "
-                                            "(when it is not fully connected).",
+                                            "The minimum number of nodes "
+                                            "of the graph's components ",
                                             1,
                                             G_MAXUINT16,
                                             GRAPH_MINIMUM_NUMBER_OF_NODES,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:hands-minimum-distance
+   *
+   * The minimum distance (in mm) that each hand should be from its
+   * respective shoulder.
+   **/
   g_object_class_install_property (obj_class,
                          PROP_HANDS_MINIMUM_DISTANCE,
                          g_param_spec_uint ("hands-minimum-distance",
@@ -232,19 +250,29 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:shoulders-minimum-distance
+   *
+   * The minimum distance (in mm) between each of the shoulders and the head.
+   **/
   g_object_class_install_property (obj_class,
                          PROP_SHOULDERS_MINIMUM_DISTANCE,
                          g_param_spec_uint ("shoulders-minimum-distance",
                                             "Shoulders' minimum distance",
                                             "The minimum distance (in mm) "
                                             "between each of the shoulders and "
-                                            "the head",
+                                            "the head.",
                                             100,
                                             G_MAXUINT16,
                                             SHOULDERS_MINIMUM_DISTANCE,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:shoulders-maximum-distance
+   *
+   * The maximum distance (in mm) between each of the shoulders and the head.
+   **/
   g_object_class_install_property (obj_class,
                          PROP_SHOULDERS_MAXIMUM_DISTANCE,
                          g_param_spec_uint ("shoulders-maximum-distance",
@@ -258,14 +286,19 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:shoulders-offset
+   *
+   * The shoulders are searched below the head using this offset (in mm)
+   * vertically and half of this offset horizontally. Changing it will
+   * affect where the shoulders will be found.
+   **/
   g_object_class_install_property (obj_class,
                          PROP_SHOULDERS_OFFSET,
                          g_param_spec_uint ("shoulders-offset",
                                             "Shoulders' offset",
-                                            "The shoulders are search below "
-                                            "the head using this offset (in mm) "
-                                            "vertically and half of this offset "
-                                            "horizontally.",
+                                            "The shoulders' offest from the "
+                                            "head.",
                                             150,
                                             G_MAXUINT16,
                                             SHOULDERS_OFFSET,
@@ -1678,8 +1711,8 @@ skeltrack_skeleton_new (void)
  * all the information will be retrieved.
  * @width: The width of the @buffer
  * @height: The height of the @buffer
- * @cancellable: (allow-none): A cancellable object, or %NULL (<b>currently
- *  unused</b>)
+ * @cancellable: (allow-none): A cancellable object, or %NULL (currently
+ *  unused)
  * @callback: (scope async): The function to call when the it is finished
  * tracking the joints
  * @user_data: (allow-none): An arbitrary user data to pass in @callback,
@@ -1770,7 +1803,7 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
  * to get the respective joints from the list.
  * Joints that could not be found will appear as %NULL in the list.
  *
- * The list should be freed using skeltrack_joint_free_list().
+ * The list should be freed using skeltrack_joint_list_free().
  *
  * Returns: (transfer full): The #SkeltrackJointList with the joints found.
  */

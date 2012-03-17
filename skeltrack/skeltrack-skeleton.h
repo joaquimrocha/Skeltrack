@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 
 #define SKELTRACK_TYPE_SKELETON (skeltrack_skeleton_get_type ())
 #define SKELTRACK_SKELETON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), SKELTRACK_TYPE_SKELETON, SkeltrackSkeleton))
-#define SKELTRACK_SKELETON_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), SKELTRACK_TYPE_SKELETON, GtkBoxClass))
+#define SKELTRACK_SKELETON_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), SKELTRACK_TYPE_SKELETON, SkeltrackSkeletonClass))
 #define SKELTRACK_IS_SKELETON(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SKELTRACK_TYPE_SKELETON))
 #define SKELTRACK_IS_SKELETON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), SKELTRACK_TYPE_SKELETON))
 #define SKELTRACK_SKELETON_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), SKELTRACK_TYPE_SKELETON, SkeltrackSkeletonClass))
@@ -49,6 +49,9 @@ struct _SkeltrackSkeleton
   SkeltrackSkeletonPrivate *priv;
 };
 
+/**
+ * SkeltrackSkeletonClass:
+ **/
 struct _SkeltrackSkeletonClass
 {
   GObjectClass parent_class;

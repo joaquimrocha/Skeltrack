@@ -60,8 +60,9 @@ skeltrack_joint_free() to free it.</doc>
           <type name="none" c:type="void"/>
         </return-value>
       </method>
-      <function name="free_list" c:identifier="skeltrack_joint_free_list">
-        <doc xml:whitespace="preserve">Frees a #SkeltrackJointList object.</doc>
+      <function name="list_free" c:identifier="skeltrack_joint_list_free">
+        <doc xml:whitespace="preserve">Frees a #SkeltrackJointList object and each #SkeltrackJoint
+in it.</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -74,9 +75,12 @@ skeltrack_joint_free() to free it.</doc>
       </function>
       <function name="list_get_joint"
                 c:identifier="skeltrack_joint_list_get_joint">
-        <doc xml:whitespace="preserve">Gets a joint from a list of skeleton joints.
+        <doc xml:whitespace="preserve">Gets a joint from a list of skeleton joints. The joint
+returned needs to be freed by using skeltrack_joint_free() or,
+alternatively, the whole list and its joints can be freed by using
+skeltrack_joint_list_free().
 
-the given @id.</doc>
+the given @id or %NULL if that joint wasn't found.</doc>
         <return-value transfer-ownership="full">
           <doc xml:whitespace="preserve">The #SkeltrackJoint that corresponds to</doc>
           <type name="Joint" c:type="SkeltrackJoint*"/>
@@ -159,7 +163,7 @@ is still running, a %G_IO_ERROR_PENDING error occurs.</doc>
           <parameter name="cancellable"
                      transfer-ownership="none"
                      allow-none="1">
-            <doc xml:whitespace="preserve">A cancellable object, or %NULL (&lt;b&gt;currently unused&lt;/b&gt;)</doc>
+            <doc xml:whitespace="preserve">A cancellable object, or %NULL (currently unused)</doc>
             <type name="Gio.Cancellable" c:type="GCancellable*"/>
           </parameter>
           <parameter name="callback"
@@ -186,7 +190,7 @@ Use skeltrack_joint_list_get_joint() with #SkeltrackJointId
 to get the respective joints from the list.
 Joints that could not be found will appear as %NULL in the list.
 
-The list should be freed using skeltrack_joint_free_list().</doc>
+The list should be freed using skeltrack_joint_list_free().</doc>
         <return-value transfer-ownership="full">
           <doc xml:whitespace="preserve">The #SkeltrackJointList with the joints found.</doc>
           <type name="JointList" c:type="SkeltrackJointList"/>
@@ -201,34 +205,48 @@ The list should be freed using skeltrack_joint_free_list().</doc>
       <property name="dimension-reduction"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The value by which the dimension of the buffer was reduced
+(in case it was).</doc>
         <type name="guint"/>
       </property>
       <property name="graph-distance-threshold"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The value (in mm) for the distance threshold between each node and its
+neighbors. This means that a node in the graph will only be connected
+to another if they aren't farther apart then this value.</doc>
         <type name="guint"/>
       </property>
       <property name="graph-minimum-number-nodes"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The minimum number of nodes each of the graph's components
+should have (when it is not fully connected).</doc>
         <type name="guint"/>
       </property>
       <property name="hands-minimum-distance"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The minimum distance (in mm) that each hand should be from its
+respective shoulder.</doc>
         <type name="guint"/>
       </property>
       <property name="shoulders-maximum-distance"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The maximum distance (in mm) between each of the shoulders and the head.</doc>
         <type name="guint"/>
       </property>
       <property name="shoulders-minimum-distance"
                 writable="1"
                 transfer-ownership="none">
+        <doc xml:whitespace="preserve">The minimum distance (in mm) between each of the shoulders and the head.</doc>
         <type name="guint"/>
       </property>
       <property name="shoulders-offset" writable="1" transfer-ownership="none">
+        <doc xml:whitespace="preserve">The shoulders are searched below the head using this offset (in mm)
+vertically and half of this offset horizontally. Changing it will
+affect where the shoulders will be found.</doc>
         <type name="guint"/>
       </property>
       <field name="parent">
@@ -249,10 +267,11 @@ The list should be freed using skeltrack_joint_free_list().</doc>
             c:type="SkeltrackSkeletonPrivate"
             disguised="1">
     </record>
-    <function name="joint_free_list"
-              c:identifier="skeltrack_joint_free_list"
-              moved-to="Joint.free_list">
-      <doc xml:whitespace="preserve">Frees a #SkeltrackJointList object.</doc>
+    <function name="joint_list_free"
+              c:identifier="skeltrack_joint_list_free"
+              moved-to="Joint.list_free">
+      <doc xml:whitespace="preserve">Frees a #SkeltrackJointList object and each #SkeltrackJoint
+in it.</doc>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
@@ -266,9 +285,12 @@ The list should be freed using skeltrack_joint_free_list().</doc>
     <function name="joint_list_get_joint"
               c:identifier="skeltrack_joint_list_get_joint"
               moved-to="Joint.list_get_joint">
-      <doc xml:whitespace="preserve">Gets a joint from a list of skeleton joints.
+      <doc xml:whitespace="preserve">Gets a joint from a list of skeleton joints. The joint
+returned needs to be freed by using skeltrack_joint_free() or,
+alternatively, the whole list and its joints can be freed by using
+skeltrack_joint_list_free().
 
-the given @id.</doc>
+the given @id or %NULL if that joint wasn't found.</doc>
       <return-value transfer-ownership="full">
         <doc xml:whitespace="preserve">The #SkeltrackJoint that corresponds to</doc>
         <type name="Joint" c:type="SkeltrackJoint*"/>

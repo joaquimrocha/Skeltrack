@@ -77,12 +77,12 @@ struct _SkeltrackJoint
   gint screen_y;
 };
 
-GType            skeltrack_joint_get_type               (void);
-gpointer         skeltrack_joint_copy                   (SkeltrackJoint *joint);
-void             skeltrack_joint_free                   (SkeltrackJoint *joint);
-void             skeltrack_joint_free_list              (SkeltrackJointList list);
-SkeltrackJoint * skeltrack_joint_list_get_joint         (SkeltrackJointList list,
-                                                         SkeltrackJointId id);
+GType                skeltrack_joint_get_type          (void);
+gpointer             skeltrack_joint_copy              (SkeltrackJoint    *joint);
+void                 skeltrack_joint_free              (SkeltrackJoint    *joint);
+void                 skeltrack_joint_list_free         (SkeltrackJointList list);
+SkeltrackJoint *     skeltrack_joint_list_get_joint    (SkeltrackJointList list,
+                                                        SkeltrackJointId   id);
 
 G_END_DECLS
 

@@ -1,6 +1,10 @@
 SUBDIRS = \
 	skeltrack
 
+if BUILD_GTK_DOC
+SUBDIRS += doc
+endif
+
 DIST_SUBDIRS = \
 	skeltrack
 

@@ -117,6 +117,8 @@ AC_OUTPUT([
         Makefile
         skeltrack/Makefile
         skeltrack/skeltrack-0.1.pc
+        doc/Makefile
+        doc/reference/Makefile
 ])
 
 echo ""

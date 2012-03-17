@@ -1,0 +1,26 @@
+<part id="skeltrack-overview">
+
+  <title>Overview</title>
+
+  <partintro>
+
+    <para>
+      Skeltrack is a library that tracks the human skeleton joints from
+      depth images.
+    </para>
+
+    <para>
+      Its main purpose is to offer an easy way to track and identify a
+      number of joints of the human skeleton from depth images.
+      It provides an easy to use asynchronous API and different aspects
+      of the algorithm used can be tweaked by simply changing some properties.
+    </para>
+
+    <para>
+      Skeltrack intends to provide also a synchronous API, but it is still
+      work in progress.
+    </para>
+
+  </partintro>
+
+</part>

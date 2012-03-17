@@ -20,6 +20,32 @@
  * for more details.
  */
 
+/**
+ * SECTION:skeltrack-joint
+ * @short_description: Data structure that holds information about
+ * a skeleton joint.
+ *
+ * A #SkeltrackJoint is built automatically by #SkeltrackSkeleton when
+ * it finds a skeleton joint and can be used to get information about it.
+ * Each #SkeltrackJoint holds an id, given by #SkeltrackJointId that indicates
+ * which of the human skeleton joints it represents.
+ *
+ * Spacial information about a joint is given by the @x, @y and @z coordinates.
+ * To represent the joint in a 2D, the variables @screen_x and
+ * @screen_y will indicate the joint's position in the screen and are calculated
+ * taking into account the #SkeltrackSkeleton:dimension-reduction (it will
+ * be multiplied by this value).
+ *
+ * The tracked list of joints is represented by #SkeltrackJointList and given
+ * by skeltrack_skeleton_track_joints_finish().
+ * To get a #SkeltrackJoint from a #SkeltrackJointList object, use the
+ * skeltrack_joint_list_get_joint() indicating the needed #SkeltrackJointId.
+ *
+ * A #SkeltrackJointList can be freed by using skeltrack_joint_list_free().
+ * A #SkeltrackJoint can be copied by skeltrack_joint_copy() and freed by
+ * skeltrack_joint_free().
+ **/
+
 #include <string.h>
 #include "skeltrack-joint.h"
 
@@ -76,13 +102,14 @@ skeltrack_joint_free (SkeltrackJoint *joint)
 
 
 /**
- * skeltrack_joint_free_list:
+ * skeltrack_joint_list_free:
  * @list: The #SkeltrackJointList to free
  *
- * Frees a #SkeltrackJointList object.
+ * Frees a #SkeltrackJointList object and each #SkeltrackJoint
+ * in it.
  **/
 void
-skeltrack_joint_free_list (SkeltrackJointList list)
+skeltrack_joint_list_free (SkeltrackJointList list)
 {
   gint i;
   for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
@@ -97,10 +124,13 @@ skeltrack_joint_free_list (SkeltrackJointList list)
  * @list: The #SkeltrackJointList
  * @id: The #SkeltrackJointId of the joint to get
  *
- * Gets a joint from a list of skeleton joints.
+ * Gets a joint from a list of skeleton joints. The joint
+ * returned needs to be freed by using skeltrack_joint_free() or,
+ * alternatively, the whole list and its joints can be freed by using
+ * skeltrack_joint_list_free().
  *
  * Returns: (transfer full): The #SkeltrackJoint that corresponds to
- * the given @id.
+ * the given @id or %NULL if that joint wasn't found.
  **/
 SkeltrackJoint *
 skeltrack_joint_list_get_joint (SkeltrackJointList list, SkeltrackJointId id)

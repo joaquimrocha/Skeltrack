@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+<glossary>
+  <title>Glossary</title>
+
+  <glossentry id="skeleton">
+    <glossterm>skeleton</glossterm>
+    <glossdef>
+      <para>Object that tracks the joints in a human skeleton.</para>
+    </glossdef>
+  </glossentry>
+
+</glossary>
