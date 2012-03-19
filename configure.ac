@@ -50,6 +50,9 @@ AM_INIT_AUTOMAKE
 # Project specific definitions
 m4_define([prj_gir_namespace], [Skeltrack])
 
+PRJ_NAME="prj_short_name"
+AC_SUBST(PRJ_NAME)
+
 PRJ_VERSION="prj_version"
 AC_SUBST(PRJ_VERSION)
 
@@ -75,6 +78,24 @@ PKG_CHECK_MODULES(GLIB, gio-2.0 >= $GLIB_REQUIRED
 		        glib-2.0 >= $GLIB_REQUIRED
 		        gthread-2.0 >= $GLIB_REQUIRED
 		        gobject-2.0 >= $GLIB_REQUIRED)
+
+
+AC_ARG_ENABLE(examples,
+        AS_HELP_STRING([--enable-examples[=@<:@no/yes@:>@]],
+                [Build examples [default=yes]]),,
+                [enable_examples=yes])
+
+# Check for GFreenect as it's required for the test-kinect example
+GFREENECT_REQUIRED=0.1.4
+CLUTTER_REQUIRED=1.8.4
+CAIRO_REQUIRED=1.10.2
+PKG_CHECK_MODULES(EXAMPLES_DEPS, gfreenect-0.1 >= GFREENECT_REQUIRED
+                                 clutter-1.0 >= CLUTTER_REQUIRED,
+                                 cairo >= CAIRO_REQUIRED,
+                                 enable_examples=yes,
+                                 enable_examples=no)
+
+AM_CONDITIONAL(ENABLE_EXAMPLES, test x"${enable_examples}" = x"yes")
 
 # GObject-Introspection check
 GOBJECT_INTROSPECTION_CHECK([0.6.7])
@@ -119,6 +140,7 @@ AC_OUTPUT([
         skeltrack/skeltrack-0.1.pc
         doc/Makefile
         doc/reference/Makefile
+        examples/Makefile
 ])
 
 echo ""
@@ -130,4 +152,5 @@ echo "    Build introspection data:   ${enable_introspection}"
 echo "     Build API documentation:   ${enable_gtk_doc}"
 echo "           Enable debug mode:   ${enable_debug}"
 echo "      Enable automated tests:   ${enable_tests}"
+echo "              Build examples:   ${enable_examples}"
 echo ""

@@ -5,6 +5,10 @@ if BUILD_GTK_DOC
 SUBDIRS += doc
 endif
 
+if ENABLE_EXAMPLES
+SUBDIRS += examples
+endif
+
 DIST_SUBDIRS = \
 	skeltrack
 
