@@ -1,5 +1,7 @@
 #!/bin/sh
 
+mkdir -p m4
+
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
