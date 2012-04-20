@@ -202,6 +202,44 @@ The list should be freed using skeltrack_joint_list_free().</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="track_joints_sync"
+              c:identifier="skeltrack_skeleton_track_joints_sync"
+              throws="1">
+        <doc xml:whitespace="preserve">Tracks the skeleton's joints synchronously.
+
+Does the same as skeltrack_skeleton_track_joints() but synchronously
+and returns the list of joints found.
+Ideal for off-line skeleton tracking.
+
+If this method is called while a previous attempt of asynchronously
+tracking the joints is still running, a %G_IO_ERROR_PENDING error occurs.
+
+The joints list should be freed using skeltrack_joint_list_free().</doc>
+        <return-value transfer-ownership="full">
+          <doc xml:whitespace="preserve">The #SkeltrackJointList with the joints found.</doc>
+          <type name="JointList" c:type="SkeltrackJointList"/>
+        </return-value>
+        <parameters>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:whitespace="preserve">The buffer containing the depth information, from which all the information will be retrieved.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="width" transfer-ownership="none">
+            <doc xml:whitespace="preserve">The width of the @buffer</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="height" transfer-ownership="none">
+            <doc xml:whitespace="preserve">The height of the @buffer</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="cancellable"
+                     transfer-ownership="none"
+                     allow-none="1">
+            <doc xml:whitespace="preserve">A cancellable object, or %NULL (currently unused)</doc>
+            <type name="Gio.Cancellable" c:type="GCancellable*"/>
+          </parameter>
+        </parameters>
+      </method>
       <property name="dimension-reduction"
                 writable="1"
                 transfer-ownership="none">

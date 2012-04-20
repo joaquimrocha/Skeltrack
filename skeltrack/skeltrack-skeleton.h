@@ -73,6 +73,13 @@ SkeltrackJointList    skeltrack_skeleton_track_joints_finish    (SkeltrackSkelet
                                                                  GAsyncResult      *result,
                                                                  GError           **error);
 
+SkeltrackJointList    skeltrack_skeleton_track_joints_sync      (SkeltrackSkeleton   *self,
+                                                                 guint16             *buffer,
+                                                                 guint                width,
+                                                                 guint                height,
+                                                                 GCancellable        *cancellable,
+                                                                 GError             **error);
+
 G_END_DECLS
 
 #endif /* __SKELTRACK_SKELETON_H__ */

@@ -1689,6 +1689,20 @@ launch_dispatch_thread (SkeltrackSkeleton *self, GError **error)
   return self->priv->dispatch_thread != NULL;
 }
 
+static void
+clean_tracking_resources (SkeltrackSkeleton *self)
+{
+  g_slice_free1 (self->priv->buffer_width *
+                 self->priv->buffer_height * sizeof (gint),
+                 self->priv->distances_matrix);
+  self->priv->distances_matrix = NULL;
+
+  g_slice_free1 (self->priv->buffer_width *
+                 self->priv->buffer_height * sizeof (Node *),
+                 self->priv->node_matrix);
+  self->priv->node_matrix = NULL;
+}
+
 /* public methods */
 
 /**
@@ -1770,19 +1784,11 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
   if (self->priv->buffer_width != width ||
       self->priv->buffer_height != height)
     {
-      g_slice_free1 (self->priv->buffer_width *
-                     self->priv->buffer_height * sizeof (gint),
-                     self->priv->distances_matrix);
-      self->priv->distances_matrix = NULL;
+      clean_tracking_resources (self);
 
-      g_slice_free1 (self->priv->buffer_width *
-                     self->priv->buffer_height * sizeof (Node *),
-                     self->priv->node_matrix);
-      self->priv->node_matrix = NULL;
-
+      self->priv->buffer_width = width;
+      self->priv->buffer_height = height;
     }
-  self->priv->buffer_width = width;
-  self->priv->buffer_height = height;
 
   g_mutex_unlock (self->priv->dispatch_mutex);
 
@@ -1826,4 +1832,60 @@ skeltrack_skeleton_track_joints_finish (SkeltrackSkeleton *self,
     }
   else
     return NULL;
+}
+
+/**
+ * skeltrack_skeleton_track_joints_sync:
+ * @self: The #SkeltrackSkeleton
+ * @buffer: The buffer containing the depth information, from which
+ * all the information will be retrieved.
+ * @width: The width of the @buffer
+ * @height: The height of the @buffer
+ * @cancellable: (allow-none): A cancellable object, or %NULL (currently
+ *  unused)
+ * @error: (allow-none): A pointer to a #GError, or %NULL
+ *
+ * Tracks the skeleton's joints synchronously.
+ *
+ * Does the same as skeltrack_skeleton_track_joints() but synchronously
+ * and returns the list of joints found.
+ * Ideal for off-line skeleton tracking.
+ *
+ * If this method is called while a previous attempt of asynchronously
+ * tracking the joints is still running, a %G_IO_ERROR_PENDING error occurs.
+ *
+ * The joints list should be freed using skeltrack_joint_list_free().
+ *
+ * Returns: (transfer full): The #SkeltrackJointList with the joints found.
+ **/
+SkeltrackJointList
+skeltrack_skeleton_track_joints_sync (SkeltrackSkeleton   *self,
+                                      guint16             *buffer,
+                                      guint                width,
+                                      guint                height,
+                                      GCancellable        *cancellable,
+                                      GError             **error)
+{
+  g_return_val_if_fail (SKELTRACK_IS_SKELETON (self), NULL);
+
+  if (self->priv->track_joints_result != NULL && error != NULL)
+    {
+      *error = g_error_new (G_IO_ERROR,
+                            G_IO_ERROR_PENDING,
+                            "Currently tracking joints");
+      return NULL;
+    }
+
+  self->priv->buffer = buffer;
+
+  if (self->priv->buffer_width != width ||
+      self->priv->buffer_height != height)
+    {
+      clean_tracking_resources (self);
+
+      self->priv->buffer_width = width;
+      self->priv->buffer_height = height;
+    }
+
+  return track_joints (self);
 }
