@@ -1,6 +1,10 @@
 SUBDIRS = \
 	skeltrack
 
+if ENABLE_TESTS
+SUBDIRS += tests
+endif
+
 if BUILD_GTK_DOC
 SUBDIRS += doc
 endif
