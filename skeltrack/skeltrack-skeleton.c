@@ -1251,13 +1251,19 @@ get_head_and_shoulders (GList *nodes,
 
       right_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
       if (right_shoulder_closest_point->i > centroid->i)
-        continue;
+        {
+          g_slice_free (Node, shoulder_point);
+          continue;
+        }
 
       shoulder_point->x = node->x + shoulders_offset / 2;
 
       left_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
       if (left_shoulder_closest_point->i < centroid->i)
-        continue;
+        {
+          g_slice_free (Node, shoulder_point);
+          continue;
+        }
 
       right_shoulder_dist = get_distance (node, right_shoulder_closest_point);
       left_shoulder_dist = get_distance (node, left_shoulder_closest_point);
