@@ -80,6 +80,9 @@ skeltrack_joint_copy (SkeltrackJoint *joint)
 {
   SkeltrackJoint *new_joint;
 
+  if (joint == NULL)
+    return NULL;
+
   new_joint = g_slice_new0 (SkeltrackJoint);
   memcpy (new_joint, joint, sizeof (SkeltrackJoint));
 
