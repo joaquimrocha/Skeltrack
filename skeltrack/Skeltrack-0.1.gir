@@ -277,6 +277,15 @@ should have (when it is not fully connected).</doc>
 respective shoulder.</doc>
         <type name="guint"/>
       </property>
+      <property name="joints-persistency"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:whitespace="preserve">The number of times that a joint can be null until its previous
+value is discarded. For example, if this property is 3, the last value for
+a joint will keep being used until the new value for this joint is null for
+3 consecutive times.</doc>
+        <type name="guint"/>
+      </property>
       <property name="shoulders-maximum-distance"
                 writable="1"
                 transfer-ownership="none">
@@ -294,6 +303,13 @@ respective shoulder.</doc>
 vertically and half of this offset horizontally. Changing it will
 affect where the shoulders will be found.</doc>
         <type name="guint"/>
+      </property>
+      <property name="smoothing-factor" writable="1" transfer-ownership="none">
+        <doc xml:whitespace="preserve">The factor by which the joints should be smoothed. This refers to
+Holt's Double Exponential Smoothing and determines how the current and
+previous data and trend will be used. A value closer to 0 will produce smoother
+results but increases latency.</doc>
+        <type name="gfloat"/>
       </property>
       <field name="parent">
         <type name="GObject.Object" c:type="GObject"/>

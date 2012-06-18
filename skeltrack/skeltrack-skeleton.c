@@ -72,6 +72,8 @@
 #define SHOULDERS_MINIMUM_DISTANCE 200
 #define SHOULDERS_MAXIMUM_DISTANCE 500
 #define SHOULDERS_OFFSET 350
+#define JOINTS_PERSISTENCY_DEFAULT 3
+#define SMOOTHING_FACTOR_DEFAULT .5
 
 typedef struct _Label Label;
 typedef struct _Node Node;
@@ -123,6 +125,13 @@ struct _SkeltrackSkeletonPrivate
   GThread *dispatch_thread;
   GMutex *dispatch_mutex;
   gboolean abort_dispatch_thread;
+
+  gfloat smoothing_factor;
+  guint joints_persistency;
+  SkeltrackJointList smoothed_joints;
+  SkeltrackJointList trend_joints;
+  guint blank_frames;
+  guint joints_persistency_counter[SKELTRACK_JOINT_MAX_JOINTS];
 };
 
 /* @TODO: Expose these to the user */
@@ -142,7 +151,9 @@ enum
     PROP_HANDS_MINIMUM_DISTANCE,
     PROP_SHOULDERS_MINIMUM_DISTANCE,
     PROP_SHOULDERS_MAXIMUM_DISTANCE,
-    PROP_SHOULDERS_OFFSET
+    PROP_SHOULDERS_OFFSET,
+    PROP_SMOOTHING_FACTOR,
+    PROP_JOINTS_PERSISTENCY
   };
 
 
@@ -159,6 +170,8 @@ static void     skeltrack_skeleton_get_property       (GObject *obj,
                                                        guint prop_id,
                                                        GValue *value,
                                                        GParamSpec *pspec);
+
+static void     reset_joints_persistency_counter      (SkeltrackSkeletonPrivate *priv);
 
 G_DEFINE_TYPE (SkeltrackSkeleton, skeltrack_skeleton, G_TYPE_OBJECT)
 
@@ -305,6 +318,48 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:smoothing-factor
+   *
+   * The factor by which the joints should be smoothed. This refers to
+   * Holt's Double Exponential Smoothing and determines how the current and
+   * previous data and trend will be used. A value closer to 0 will produce smoother
+   * results but increases latency.
+   **/
+  g_object_class_install_property (obj_class,
+                         PROP_SMOOTHING_FACTOR,
+                         g_param_spec_float ("smoothing-factor",
+                                             "Smoothing factor",
+                                             "The factor by which the joints values"
+                                             "should be smoothed.",
+                                             .0,
+                                             1.0,
+                                             .5,
+                                             G_PARAM_READWRITE |
+                                             G_PARAM_STATIC_STRINGS));
+
+  /**
+   * SkeltrackSkeleton:joints-persistency
+   *
+   * The number of times that a joint can be null until its previous
+   * value is discarded. For example, if this property is 3, the last value for
+   * a joint will keep being used until the new value for this joint is null for
+   * 3 consecutive times.
+   *
+   **/
+  g_object_class_install_property (obj_class,
+                         PROP_JOINTS_PERSISTENCY,
+                         g_param_spec_uint ("joints-persistency",
+                                            "Joints persistency",
+                                            "The number of times that a joint "
+                                            "can be null until its previous "
+                                            "value is discarded",
+                                            0,
+                                            G_MAXUINT16,
+                                            JOINTS_PERSISTENCY_DEFAULT,
+                                            G_PARAM_READWRITE |
+                                            G_PARAM_STATIC_STRINGS));
+
   /* add private structure */
   g_type_class_add_private (obj_class, sizeof (SkeltrackSkeletonPrivate));
 }
@@ -312,6 +367,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
 static void
 skeltrack_skeleton_init (SkeltrackSkeleton *self)
 {
+  guint i;
   SkeltrackSkeletonPrivate *priv;
 
   priv = SKELTRACK_SKELETON_GET_PRIVATE (self);
@@ -341,6 +397,13 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->dispatch_thread = NULL;
   priv->dispatch_mutex = g_mutex_new ();
+
+  priv->smoothing_factor = SMOOTHING_FACTOR_DEFAULT;
+  priv->smoothed_joints = NULL;
+  priv->trend_joints = NULL;
+  priv->joints_persistency = JOINTS_PERSISTENCY_DEFAULT;
+  for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+    priv->joints_persistency_counter[i] = JOINTS_PERSISTENCY_DEFAULT;
 }
 
 static void
@@ -370,6 +433,9 @@ skeltrack_skeleton_dispose (GObject *obj)
 
       g_mutex_unlock (self->priv->dispatch_mutex);
     }
+
+  skeltrack_joint_list_free (self->priv->smoothed_joints);
+  skeltrack_joint_list_free (self->priv->trend_joints);
 
   G_OBJECT_CLASS (skeltrack_skeleton_parent_class)->dispose (obj);
 }
@@ -424,6 +490,15 @@ skeltrack_skeleton_set_property (GObject      *obj,
       self->priv->shoulders_offset = g_value_get_uint (value);
       break;
 
+    case PROP_SMOOTHING_FACTOR:
+      self->priv->smoothing_factor = g_value_get_uint (value);
+      break;
+
+    case PROP_JOINTS_PERSISTENCY:
+      self->priv->joints_persistency = g_value_get_uint (value);
+      reset_joints_persistency_counter (self->priv);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
       break;
@@ -468,6 +543,14 @@ skeltrack_skeleton_get_property (GObject    *obj,
 
     case PROP_SHOULDERS_OFFSET:
       g_value_set_uint (value, self->priv->shoulders_offset);
+      break;
+
+    case PROP_SMOOTHING_FACTOR:
+      g_value_set_uint (value, self->priv->smoothing_factor);
+      break;
+
+    case PROP_JOINTS_PERSISTENCY:
+      g_value_set_uint (value, self->priv->joints_persistency);
       break;
 
     default:
@@ -1575,6 +1658,206 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_b);
 }
 
+static gfloat
+holt_double_exp_formula_st (gfloat alpha,
+                            gfloat previous_trend,
+                            gfloat current_value,
+                            gfloat previous_smoothed_value)
+{
+  return alpha * current_value +
+    (1.0 - alpha) * (previous_smoothed_value + previous_trend);
+}
+
+static gfloat
+holt_double_exp_formula_bt (gfloat beta,
+                            gfloat previous_trend,
+                            gfloat current_smoothed_value,
+                            gfloat previous_smoothed_value)
+{
+  return beta * (current_smoothed_value - previous_smoothed_value) +
+    (1.0 - beta) * previous_trend;
+}
+
+static void
+holt_double_exp_joint (gfloat alpha,
+                       gfloat beta,
+                       SkeltrackJoint *smoothed_joint,
+                       SkeltrackJoint *current_joint,
+                       SkeltrackJoint *trend_joint)
+{
+  gfloat new_x, new_y, new_z, new_screen_x, new_screen_y;
+  new_x = holt_double_exp_formula_st (alpha,
+                                      trend_joint->x,
+                                      current_joint->x,
+                                      smoothed_joint->x);
+  new_y = holt_double_exp_formula_st (alpha,
+                                      trend_joint->y,
+                                      current_joint->y,
+                                      smoothed_joint->y);
+  new_z = holt_double_exp_formula_st (alpha,
+                                      trend_joint->z,
+                                      current_joint->z,
+                                      smoothed_joint->z);
+  new_screen_x = holt_double_exp_formula_st (alpha,
+                                             trend_joint->screen_x,
+                                             current_joint->screen_x,
+                                             smoothed_joint->screen_x);
+  new_screen_y = holt_double_exp_formula_st (alpha,
+                                             trend_joint->screen_y,
+                                             current_joint->screen_y,
+                                             smoothed_joint->screen_y);
+  trend_joint->x = holt_double_exp_formula_bt (beta,
+                                               trend_joint->x,
+                                               new_x,
+                                               smoothed_joint->x);
+  trend_joint->y = holt_double_exp_formula_bt (beta,
+                                               trend_joint->y,
+                                               new_y,
+                                               smoothed_joint->y);
+  trend_joint->z = holt_double_exp_formula_bt (beta,
+                                               trend_joint->z,
+                                               new_z,
+                                               smoothed_joint->z);
+  trend_joint->screen_x = holt_double_exp_formula_bt (beta,
+                                                      trend_joint->screen_x,
+                                                      new_screen_x,
+                                                      smoothed_joint->screen_x);
+  trend_joint->screen_y = holt_double_exp_formula_bt (beta,
+                                                      trend_joint->screen_y,
+                                                      new_screen_y,
+                                                      smoothed_joint->screen_y);
+  smoothed_joint->x = new_x;
+  smoothed_joint->y = new_y;
+  smoothed_joint->z = new_z;
+  smoothed_joint->screen_x = new_screen_x;
+  smoothed_joint->screen_y = new_screen_y;
+}
+
+static void
+reset_joints_persistency_counter (SkeltrackSkeletonPrivate *priv)
+{
+  guint i;
+  for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+    {
+      priv->joints_persistency_counter[i] = priv->joints_persistency;
+    }
+}
+
+static void
+decrease_joints_persistency (SkeltrackSkeletonPrivate *priv)
+{
+  guint i;
+  for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+    {
+      SkeltrackJoint *smoothed_joint = NULL;
+      SkeltrackJoint *trend_joint = NULL;
+
+      if (priv->smoothed_joints)
+        smoothed_joint = priv->smoothed_joints[i];
+      if (priv->trend_joints)
+        trend_joint = priv->trend_joints[i];
+
+      if (smoothed_joint != NULL || trend_joint != NULL)
+        {
+          if (priv->joints_persistency_counter[i] > 0)
+            priv->joints_persistency_counter[i]--;
+          else
+            {
+              skeltrack_joint_free (smoothed_joint);
+              skeltrack_joint_free (trend_joint);
+              if (smoothed_joint)
+                priv->smoothed_joints[i] = NULL;
+              if (trend_joint)
+                priv->trend_joints[i] = NULL;
+              priv->joints_persistency_counter[i] = priv->joints_persistency;
+            }
+        }
+    }
+}
+
+static void
+smooth_joints (SkeltrackSkeletonPrivate *priv,
+               SkeltrackJointList new_joints)
+{
+  guint i;
+
+  if (new_joints == NULL)
+    {
+      decrease_joints_persistency (priv);
+      return;
+    }
+
+  if (priv->smoothed_joints == NULL)
+    {
+      priv->smoothed_joints = skeltrack_joint_list_new ();
+      for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+        {
+          priv->smoothed_joints[i] = skeltrack_joint_copy (new_joints[i]);
+        }
+      return;
+    }
+  if (priv->trend_joints == NULL)
+    {
+      priv->trend_joints = skeltrack_joint_list_new ();
+    }
+
+  for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+    {
+      SkeltrackJoint *joint, *smoothed_joint, *trend_joint;
+
+      smoothed_joint = priv->smoothed_joints[i];
+      trend_joint = priv->trend_joints[i];
+      joint = new_joints[i];
+      if (joint == NULL)
+        {
+          if (smoothed_joint != NULL)
+            {
+              if (priv->joints_persistency_counter[i] > 0)
+                priv->joints_persistency_counter[i]--;
+              else
+                {
+                  skeltrack_joint_free (smoothed_joint);
+                  skeltrack_joint_free (trend_joint);
+                  priv->smoothed_joints[i] = NULL;
+                  priv->trend_joints[i] = NULL;
+                  priv->joints_persistency_counter[i] = priv->joints_persistency;
+                }
+            }
+          continue;
+        }
+      priv->joints_persistency_counter[i] = priv->joints_persistency;
+
+      if (smoothed_joint == NULL)
+        {
+          priv->smoothed_joints[i] = skeltrack_joint_copy (joint);
+          continue;
+        }
+
+      if (trend_joint == NULL)
+        {
+          /* First case (when there are only initial values) */
+          trend_joint = g_slice_new0 (SkeltrackJoint);
+          trend_joint->x = joint->x - smoothed_joint->x;
+          trend_joint->y = joint->y - smoothed_joint->y;
+          trend_joint->z = joint->z - smoothed_joint->z;
+          trend_joint->screen_x = joint->screen_x - smoothed_joint->screen_x;
+          trend_joint->screen_y = joint->screen_y - smoothed_joint->screen_y;
+          priv->trend_joints[i] = trend_joint;
+        }
+      else
+        {
+          /* @TODO: Check if we should give the control of each factor
+             independently (data-smoothing-factor and trend-smoothing-factor).
+          */
+          holt_double_exp_joint (priv->smoothing_factor,
+                                 priv->smoothing_factor,
+                                 smoothed_joint,
+                                 joint,
+                                 trend_joint);
+        }
+    }
+}
+
 static SkeltrackJoint **
 track_joints (SkeltrackSkeleton *self)
 {
@@ -1584,6 +1867,7 @@ track_joints (SkeltrackSkeleton *self)
   Node *left_shoulder = NULL;
   GList *extremas;
   SkeltrackJointList joints = NULL;
+  SkeltrackJointList smoothed = NULL;
 
   self->priv->graph = make_graph (self, &self->priv->labels);
   centroid = get_centroid (self);
@@ -1635,7 +1919,42 @@ track_joints (SkeltrackSkeleton *self)
   g_list_free (self->priv->labels);
   self->priv->labels = NULL;
 
-  return joints;
+  smooth_joints (self->priv, joints);
+
+  if (self->priv->smoothed_joints != NULL)
+    {
+      guint i;
+      smoothed = skeltrack_joint_list_new ();
+      for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
+        {
+          SkeltrackJoint *smoothed_joint, *smooth, *trend;
+          smoothed_joint = NULL;
+          smooth = self->priv->smoothed_joints[i];
+          if (smooth != NULL)
+            {
+              if (self->priv->trend_joints != NULL)
+                {
+                  trend = self->priv->trend_joints[i];
+                  if (trend != NULL)
+                    {
+                      smoothed_joint = g_slice_new0 (SkeltrackJoint);
+                      smoothed_joint->x = smooth->x + trend->x;
+                      smoothed_joint->y = smooth->y + trend->y;
+                      smoothed_joint->z = smooth->z + trend->z;
+                      smoothed_joint->screen_x = smooth->screen_x + trend->screen_x;
+                      smoothed_joint->screen_y = smooth->screen_y + trend->screen_y;
+                    }
+                  else
+                    smoothed_joint = skeltrack_joint_copy (smooth);
+                }
+              else
+                smoothed_joint = skeltrack_joint_copy (smooth);
+            }
+          smoothed[i] = smoothed_joint;
+        }
+    }
+
+  return smoothed;
 }
 
 static gpointer
