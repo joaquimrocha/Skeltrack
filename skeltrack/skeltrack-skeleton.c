@@ -1583,14 +1583,11 @@ track_joints (SkeltrackSkeleton *self)
   Node *right_shoulder = NULL;
   Node *left_shoulder = NULL;
   GList *extremas;
-  SkeltrackJoint **joints;
+  SkeltrackJointList joints = NULL;
 
   self->priv->graph = make_graph (self, &self->priv->labels);
   centroid = get_centroid (self);
   extremas = get_extremas (self, centroid);
-
-  joints = g_slice_alloc0 (SKELTRACK_JOINT_MAX_JOINTS *
-                           sizeof (SkeltrackJoint *));
 
   if (g_list_length (extremas) > 2 &&
       get_head_and_shoulders (self->priv->graph,
@@ -1603,6 +1600,7 @@ track_joints (SkeltrackSkeleton *self)
                               &left_shoulder,
                               &right_shoulder))
     {
+      joints = skeltrack_joint_list_new ();
 
       set_joint_from_node (&joints,
                            head,
@@ -1637,7 +1635,7 @@ track_joints (SkeltrackSkeleton *self)
   g_list_free (self->priv->labels);
   self->priv->labels = NULL;
 
-  return (SkeltrackJointList) joints;
+  return joints;
 }
 
 static gpointer

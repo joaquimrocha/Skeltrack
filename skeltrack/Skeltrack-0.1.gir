@@ -96,6 +96,14 @@ the given @id or %NULL if that joint wasn't found.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="list_new" c:identifier="skeltrack_joint_list_new">
+        <doc xml:whitespace="preserve">Created a new list of #SkeltrackJointsList with its joints as #NULL.
+When it is no longer needed, free it with skeltrack_joint_list_free().</doc>
+        <return-value transfer-ownership="full">
+          <doc xml:whitespace="preserve">A newly allocated #SkeltrackJointList</doc>
+          <type name="JointList" c:type="SkeltrackJointList"/>
+        </return-value>
+      </function>
     </record>
     <enumeration name="JointId" c:type="SkeltrackJointId">
       <doc xml:whitespace="preserve">Available joint ids.</doc>
@@ -343,6 +351,16 @@ the given @id or %NULL if that joint wasn't found.</doc>
           <type name="JointId" c:type="SkeltrackJointId"/>
         </parameter>
       </parameters>
+    </function>
+    <function name="joint_list_new"
+              c:identifier="skeltrack_joint_list_new"
+              moved-to="Joint.list_new">
+      <doc xml:whitespace="preserve">Created a new list of #SkeltrackJointsList with its joints as #NULL.
+When it is no longer needed, free it with skeltrack_joint_list_free().</doc>
+      <return-value transfer-ownership="full">
+        <doc xml:whitespace="preserve">A newly allocated #SkeltrackJointList</doc>
+        <type name="JointList" c:type="SkeltrackJointList"/>
+      </return-value>
     </function>
   </namespace>
 </repository>
