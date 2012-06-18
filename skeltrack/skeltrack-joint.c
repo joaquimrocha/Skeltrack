@@ -113,6 +113,10 @@ void
 skeltrack_joint_list_free (SkeltrackJointList list)
 {
   gint i;
+
+  if (list == NULL)
+    return;
+
   for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
     {
       g_slice_free (SkeltrackJoint, list[i]);
