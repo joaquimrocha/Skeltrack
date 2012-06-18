@@ -138,3 +138,18 @@ skeltrack_joint_list_get_joint (SkeltrackJointList list, SkeltrackJointId id)
 {
   return list[id];
 }
+
+/**
+ * skeltrack_joint_list_new:
+ *
+ * Created a new list of #SkeltrackJointsList with its joints as #NULL.
+ * When it is no longer needed, free it with skeltrack_joint_list_free().
+ *
+ * Returns: (transfer full): A newly allocated #SkeltrackJointList
+ **/
+SkeltrackJointList
+skeltrack_joint_list_new (void)
+{
+  return (SkeltrackJointList) g_slice_alloc0 (SKELTRACK_JOINT_MAX_JOINTS *
+                                              sizeof (SkeltrackJoint *));
+}

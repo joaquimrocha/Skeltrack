@@ -81,6 +81,7 @@ GType                skeltrack_joint_get_type          (void);
 gpointer             skeltrack_joint_copy              (SkeltrackJoint    *joint);
 void                 skeltrack_joint_free              (SkeltrackJoint    *joint);
 void                 skeltrack_joint_list_free         (SkeltrackJointList list);
+SkeltrackJointList   skeltrack_joint_list_new          (void);
 SkeltrackJoint *     skeltrack_joint_list_get_joint    (SkeltrackJointList list,
                                                         SkeltrackJointId   id);
 
