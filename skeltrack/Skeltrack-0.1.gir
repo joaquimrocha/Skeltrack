@@ -255,6 +255,10 @@ The joints list should be freed using skeltrack_joint_list_free().</doc>
 (in case it was).</doc>
         <type name="guint"/>
       </property>
+      <property name="enable-smoothing" writable="1" transfer-ownership="none">
+        <doc xml:whitespace="preserve">Whether smoothing the joints should be applied or not.</doc>
+        <type name="gboolean"/>
+      </property>
       <property name="graph-distance-threshold"
                 writable="1"
                 transfer-ownership="none">
