@@ -467,8 +467,8 @@ create_instructions (void)
                          "\tChange between skeleton\n"
                          "\t  tracking and threshold view:  \tSpace bar\n"
                          "\tSet tilt angle:  \t\t\t\tUp/Down Arrows\n"
-                         "\tIncrease threshold:  \t\t\t+/-"
-                         "\tEnable/Disable smoothing:  \t\t\ts\n"
+                         "\tIncrease threshold:  \t\t\t+/-\n"
+                         "\tEnable/Disable smoothing:  \t\ts\n"
                          "\tSet smoothing level:  \t\t\tLeft/Right Arrows\n"
                            );
   return text;
@@ -506,7 +506,7 @@ on_new_kinect_device (GObject      *obj,
 
   stage = clutter_stage_get_default ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Kinect Test");
-  clutter_actor_set_size (stage, width * 2, height + 200);
+  clutter_actor_set_size (stage, width * 2, height + 250);
   clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
 
   g_signal_connect (stage, "destroy", G_CALLBACK (on_destroy), kinect);
