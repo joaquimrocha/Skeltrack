@@ -511,7 +511,7 @@ skeltrack_skeleton_set_property (GObject      *obj,
       break;
 
     case PROP_SMOOTHING_FACTOR:
-      self->priv->smoothing_factor = g_value_get_uint (value);
+      self->priv->smoothing_factor = g_value_get_float (value);
       break;
 
     case PROP_JOINTS_PERSISTENCY:
@@ -570,7 +570,7 @@ skeltrack_skeleton_get_property (GObject    *obj,
       break;
 
     case PROP_SMOOTHING_FACTOR:
-      g_value_set_uint (value, self->priv->smoothing_factor);
+      g_value_set_float (value, self->priv->smoothing_factor);
       break;
 
     case PROP_JOINTS_PERSISTENCY:
