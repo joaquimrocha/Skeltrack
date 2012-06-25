@@ -16,6 +16,7 @@ static SkeltrackJointList list = NULL;
 
 static gboolean SHOW_SKELETON = TRUE;
 static gboolean ENABLE_SMOOTHING = TRUE;
+static gfloat SMOOTHING_FACTOR = .0;
 
 static guint THRESHOLD_BEGIN = 500;
 /* Adjust this value to increase of decrease
@@ -353,10 +354,12 @@ set_info_text (void)
   gchar *title;
   title = g_strdup_printf ("<b>Current View:</b> %s\t\t\t"
                            "<b>Threshold:</b> %d\n"
-                           "<b>Smoothing Enabled:</b> %s",
+                           "<b>Smoothing Enabled:</b> %s\t\t\t"
+                           "<b>Smoothing Level:</b> %.2f",
                            SHOW_SKELETON ? "Skeleton" : "Point Cloud",
                            THRESHOLD_END,
-                           ENABLE_SMOOTHING ? "Yes" : "No");
+                           ENABLE_SMOOTHING ? "Yes" : "No",
+                           SMOOTHING_FACTOR);
   clutter_text_set_markup (CLUTTER_TEXT (info_text), title);
   g_free (title);
 }
@@ -397,6 +400,17 @@ enable_smoothing (gboolean enable)
     g_object_set (skeleton, "enable-smoothing", enable, NULL);
 }
 
+static void
+set_smoothing_factor (gfloat factor)
+{
+  if (skeleton != NULL)
+    {
+      SMOOTHING_FACTOR += factor;
+      SMOOTHING_FACTOR = CLAMP (SMOOTHING_FACTOR, 0.0, 1.0);
+      g_object_set (skeleton, "smoothing-factor", SMOOTHING_FACTOR, NULL);
+    }
+}
+
 static gboolean
 on_key_release (ClutterActor *actor,
                 ClutterEvent *event,
@@ -430,6 +444,12 @@ on_key_release (ClutterActor *actor,
     case CLUTTER_KEY_s:
       ENABLE_SMOOTHING = !ENABLE_SMOOTHING;
       enable_smoothing (ENABLE_SMOOTHING);
+      break;
+    case CLUTTER_KEY_Right:
+      set_smoothing_factor (.05);
+      break;
+    case CLUTTER_KEY_Left:
+      set_smoothing_factor (-.05);
       break;
     }
   set_info_text ();
@@ -503,7 +523,6 @@ on_new_kinect_device (GObject      *obj,
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), video_tex);
 
   info_text = clutter_text_new ();
-  set_info_text ();
   clutter_actor_set_position (info_text, 50, height + 20);
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), info_text);
 
@@ -514,6 +533,9 @@ on_new_kinect_device (GObject      *obj,
   clutter_actor_show_all (stage);
 
   skeleton = SKELTRACK_SKELETON (skeltrack_skeleton_new ());
+  g_object_get (skeleton, "smoothing-factor", &SMOOTHING_FACTOR, NULL);
+
+  set_info_text ();
 
   g_signal_connect (kinect,
                     "depth-frame",
