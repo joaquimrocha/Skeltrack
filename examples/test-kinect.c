@@ -15,6 +15,7 @@ static ClutterActor *video_tex;
 static SkeltrackJointList list = NULL;
 
 static gboolean SHOW_SKELETON = TRUE;
+static gboolean ENABLE_SMOOTHING = TRUE;
 
 static guint THRESHOLD_BEGIN = 500;
 /* Adjust this value to increase of decrease
@@ -160,6 +161,7 @@ create_grayscale_buffer (BufferInfo *buffer_info, gint dimension_reduction)
 static void
 on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
 {
+  gboolean smoothing_enabled;
   gint width, height;
   gint dimension_factor;
   guchar *grayscale_buffer;
@@ -349,9 +351,12 @@ static void
 set_info_text (void)
 {
   gchar *title;
-  title = g_strdup_printf ("<b>Current View:</b> %s\n<b>Threshold:</b> %d",
+  title = g_strdup_printf ("<b>Current View:</b> %s\t\t\t"
+                           "<b>Threshold:</b> %d\n"
+                           "<b>Smoothing Enabled:</b> %s",
                            SHOW_SKELETON ? "Skeleton" : "Point Cloud",
-                           THRESHOLD_END);
+                           THRESHOLD_END,
+                           ENABLE_SMOOTHING ? "Yes" : "No");
   clutter_text_set_markup (CLUTTER_TEXT (info_text), title);
   g_free (title);
 }
@@ -385,6 +390,13 @@ set_tilt_angle (GFreenectDevice *kinect, gdouble difference)
                                      NULL);
 }
 
+static void
+enable_smoothing (gboolean enable)
+{
+  if (skeleton != NULL)
+    g_object_set (skeleton, "enable-smoothing", enable, NULL);
+}
+
 static gboolean
 on_key_release (ClutterActor *actor,
                 ClutterEvent *event,
@@ -415,6 +427,10 @@ on_key_release (ClutterActor *actor,
     case CLUTTER_KEY_Down:
       set_tilt_angle (kinect, -5);
       break;
+    case CLUTTER_KEY_s:
+      ENABLE_SMOOTHING = !ENABLE_SMOOTHING;
+      enable_smoothing (ENABLE_SMOOTHING);
+      break;
     }
   set_info_text ();
   return TRUE;
@@ -431,7 +447,10 @@ create_instructions (void)
                          "\tChange between skeleton\n"
                          "\t  tracking and threshold view:  \tSpace bar\n"
                          "\tSet tilt angle:  \t\t\t\tUp/Down Arrows\n"
-                         "\tIncrease threshold:  \t\t\t+/-");
+                         "\tIncrease threshold:  \t\t\t+/-"
+                         "\tEnable/Disable smoothing:  \t\t\ts\n"
+                         "\tSet smoothing level:  \t\t\tLeft/Right Arrows\n"
+                           );
   return text;
 }
 
