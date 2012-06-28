@@ -25,7 +25,8 @@ lib_LTLIBRARIES = lib@PRJ_API_NAME@.la
 # libskeltrack
 source_c = \
 	skeltrack-joint.c \
-	skeltrack-skeleton.c
+	skeltrack-skeleton.c \
+	skeltrack-smooth.c
 
 source_h = \
 	skeltrack.h \
@@ -54,6 +55,8 @@ skeltrackdir = $(includedir)/@PRJ_API_NAME@
 skeltrack_HEADERS = \
 	$(source_h) \
 	$(source_h_priv)
+
+noinst_HEADERS = skeltrack-smooth.h
 
 # introspection support
 if HAVE_INTROSPECTION
