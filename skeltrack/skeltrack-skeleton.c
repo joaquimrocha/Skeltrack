@@ -126,7 +126,6 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_offset;
 
   gboolean enable_smoothing;
-  guint blank_frames;
   SmoothData smooth_data;
 };
 
