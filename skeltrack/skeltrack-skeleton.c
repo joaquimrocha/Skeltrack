@@ -127,6 +127,8 @@ struct _SkeltrackSkeletonPrivate
 
   gboolean enable_smoothing;
   SmoothData smooth_data;
+
+  SkeltrackJoint *previous_head;
 };
 
 /* @TODO: Expose these to the user */
@@ -417,6 +419,8 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->smooth_data.joints_persistency = JOINTS_PERSISTENCY_DEFAULT;
   for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
     priv->smooth_data.joints_persistency_counter[i] = JOINTS_PERSISTENCY_DEFAULT;
+
+  priv->previous_head = NULL;
 }
 
 static void
@@ -436,6 +440,8 @@ skeltrack_skeleton_finalize (GObject *obj)
 
   skeltrack_joint_list_free (self->priv->smooth_data.smoothed_joints);
   skeltrack_joint_list_free (self->priv->smooth_data.trend_joints);
+
+  skeltrack_joint_free (self->priv->previous_head);
 
   clean_tracking_resources (self);
 
@@ -1688,6 +1694,45 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_b);
 }
 
+static guint
+get_distance_from_joint (Node *node, SkeltrackJoint *joint)
+{
+  guint dx, dy, dz;
+  dx = ABS (node->x - joint->x);
+  dy = ABS (node->y - joint->y);
+  dz = ABS (node->z - joint->z);
+  return sqrt (dx * dx + dy * dy + dz * dz);
+}
+
+static Node *
+get_closest_node_to_joint (GList *extremas,
+                           SkeltrackJoint *joint,
+                           gint *distance)
+{
+  GList *current_node;
+  gint dist = -1;
+  Node *closest_node = NULL;
+
+  for (current_node = g_list_first (extremas);
+       current_node != NULL;
+       current_node = g_list_next (current_node))
+    {
+      guint current_dist;
+      Node *node = (Node *) current_node->data;
+      if (node == NULL)
+        continue;
+
+      current_dist = get_distance_from_joint (node, joint);
+      if (dist == -1 || current_dist < dist)
+        {
+          closest_node = node;
+          dist = current_dist;
+        }
+    }
+  *distance = dist;
+  return closest_node;
+}
+
 static SkeltrackJoint **
 track_joints (SkeltrackSkeleton *self)
 {
@@ -1703,18 +1748,47 @@ track_joints (SkeltrackSkeleton *self)
   centroid = get_centroid (self);
   extremas = get_extremas (self, centroid);
 
-  if (g_list_length (extremas) > 2 &&
-      get_head_and_shoulders (self->priv->graph,
-                              self->priv->shoulders_minimum_distance,
-                              self->priv->shoulders_maximum_distance,
-                              self->priv->shoulders_offset,
-                              extremas,
-                              centroid,
-                              &head,
-                              &left_shoulder,
-                              &right_shoulder))
+  if (g_list_length (extremas) > 2)
     {
-      joints = skeltrack_joint_list_new ();
+      if (self->priv->previous_head)
+        {
+          gint distance;
+          gboolean can_be_head = FALSE;
+          head = get_closest_node_to_joint (extremas,
+                                            self->priv->previous_head,
+                                            &distance);
+          if (head != NULL &&
+              distance < GRAPH_DISTANCE_THRESHOLD)
+            {
+              can_be_head = check_if_node_can_be_head (self->priv->graph,
+                                                       head,
+                                                       self->priv->shoulders_minimum_distance,
+                                                       self->priv->shoulders_maximum_distance,
+                                                       self->priv->shoulders_offset,
+                                                       centroid,
+                                                       &left_shoulder,
+                                                       &right_shoulder);
+            }
+
+          if (!can_be_head)
+            head = NULL;
+        }
+
+      if (head == NULL)
+        {
+          get_head_and_shoulders (self->priv->graph,
+                                  self->priv->shoulders_minimum_distance,
+                                  self->priv->shoulders_maximum_distance,
+                                  self->priv->shoulders_offset,
+                                  extremas,
+                                  centroid,
+                                  &head,
+                                  &left_shoulder,
+                                  &right_shoulder);
+        }
+
+      if (joints == NULL)
+        joints = skeltrack_joint_list_new ();
 
       set_joint_from_node (&joints,
                            head,
@@ -1788,6 +1862,14 @@ track_joints (SkeltrackSkeleton *self)
       skeltrack_joint_list_free (joints);
 
       joints = smoothed;
+    }
+
+  skeltrack_joint_free (self->priv->previous_head);
+  if (joints)
+    {
+      SkeltrackJoint *joint = skeltrack_joint_list_get_joint (joints,
+                                                   SKELTRACK_JOINT_ID_HEAD);
+      self->priv->previous_head = skeltrack_joint_copy (joint);
     }
 
   g_list_free (extremas);
