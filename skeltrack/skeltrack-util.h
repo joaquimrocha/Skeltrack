@@ -20,6 +20,7 @@
  * for more details.
  */
 
+#include <glib.h>
 #include "skeltrack-joint.h"
 
 typedef struct _Label Label;
@@ -48,3 +49,57 @@ struct _Node {
 Node *        get_closest_node_to_joint        (GList *extremas,
                                                 SkeltrackJoint *joint,
                                                 gint *distance);
+
+Node *        get_closest_node                 (GList *node_list, Node *from);
+
+Label *       label_find                       (Label *label);
+
+void          label_union                      (Label *a, Label *b);
+
+gint          get_distance                     (Node *a, Node *b);
+
+void          free_label                       (Label *label);
+
+void          clean_labels                     (GList *labels);
+
+void          free_node                        (Node *node,
+                                                gboolean unlink_node_first);
+
+void          clean_nodes                      (GList *nodes);
+
+GList *       remove_nodes_with_label          (GList *nodes,
+                                                Node **node_matrix,
+                                                gint width,
+                                                Label *label);
+
+Label *       get_lowest_index_label           (Label **neighbor_labels);
+
+Label *       new_label                        (gint index);
+
+void          join_components_to_lowest        (GList *nodes,
+                                                GList *lowest_component,
+                                                Label *lowest_component_label);
+
+void          set_joint_from_node              (SkeltrackJointList *joints,
+                                                Node *node,
+                                                SkeltrackJointId id,
+                                                gint dimension_reduction);
+
+gint *        create_new_dist_matrix           (gint matrix_size);
+
+gboolean      dijkstra_to                      (GList *nodes,
+                                                Node *source,
+                                                Node *target,
+                                                gint width,
+                                                gint height,
+                                                gint *distances,
+                                                Node **previous);
+
+void          convert_screen_coords_to_mm      (guint width,
+                                                guint height,
+                                                guint dimension_reduction,
+                                                guint i,
+                                                guint j,
+                                                gint  z,
+                                                gint *x,
+                                                gint *y);
