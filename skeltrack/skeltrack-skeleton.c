@@ -61,6 +61,7 @@
 
 #include "skeltrack-skeleton.h"
 #include "skeltrack-smooth.h"
+#include "skeltrack-util.h"
 
 #define SKELTRACK_SKELETON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
                                              SKELTRACK_TYPE_SKELETON, \
@@ -76,29 +77,6 @@
 #define JOINTS_PERSISTENCY_DEFAULT 3
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
-
-typedef struct _Label Label;
-typedef struct _Node Node;
-
-struct _Label {
-  gint index;
-  Label *parent;
-  GList *nodes;
-  Node *bridge_node;
-  Node *to_node;
-  gint lower_screen_y;
-};
-
-struct _Node {
-  gint i;
-  gint j;
-  gint x;
-  gint y;
-  gint z;
-  GList *neighbors;
-  GList *linked_nodes;
-  Label *label;
-};
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -1692,45 +1670,6 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
   g_slice_free1 (matrix_size * sizeof (gint), dist_left_b);
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_a);
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_b);
-}
-
-static guint
-get_distance_from_joint (Node *node, SkeltrackJoint *joint)
-{
-  guint dx, dy, dz;
-  dx = ABS (node->x - joint->x);
-  dy = ABS (node->y - joint->y);
-  dz = ABS (node->z - joint->z);
-  return sqrt (dx * dx + dy * dy + dz * dz);
-}
-
-static Node *
-get_closest_node_to_joint (GList *extremas,
-                           SkeltrackJoint *joint,
-                           gint *distance)
-{
-  GList *current_node;
-  gint dist = -1;
-  Node *closest_node = NULL;
-
-  for (current_node = g_list_first (extremas);
-       current_node != NULL;
-       current_node = g_list_next (current_node))
-    {
-      guint current_dist;
-      Node *node = (Node *) current_node->data;
-      if (node == NULL)
-        continue;
-
-      current_dist = get_distance_from_joint (node, joint);
-      if (dist == -1 || current_dist < dist)
-        {
-          closest_node = node;
-          dist = current_dist;
-        }
-    }
-  *distance = dist;
-  return closest_node;
 }
 
 static SkeltrackJoint **
