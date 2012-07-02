@@ -1303,19 +1303,81 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
 }
 
 static gboolean
-get_head_and_shoulders (GList *nodes,
+check_if_node_can_be_head (GList *nodes,
+                           Node *node,
+                           guint16 shoulders_minimum_distance,
+                           guint16 shoulders_maximum_distance,
+                           guint16 shoulders_offset,
+                           Node *centroid,
+                           Node **left_shoulder,
+                           Node **right_shoulder)
+{
+  Node *shoulder_point,
+    *right_shoulder_closest_point,
+    *left_shoulder_closest_point;
+  gint right_shoulder_dist, left_shoulder_dist, shoulders_distance;
+  if (node->j > centroid->j)
+    return FALSE;
+
+  shoulder_point = g_slice_new0 (Node);
+  shoulder_point->x = node->x - shoulders_offset / 2;
+  shoulder_point->y = node->y + shoulders_offset;
+  shoulder_point->z = node->z;
+
+  right_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
+  if (right_shoulder_closest_point->i > centroid->i)
+    {
+      g_slice_free (Node, shoulder_point);
+      return FALSE;
+    }
+
+  shoulder_point->x = node->x + shoulders_offset / 2;
+
+  left_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
+  if (left_shoulder_closest_point->i < centroid->i)
+    {
+      g_slice_free (Node, shoulder_point);
+      return FALSE;
+    }
+
+  right_shoulder_dist = get_distance (node, right_shoulder_closest_point);
+  left_shoulder_dist = get_distance (node, left_shoulder_closest_point);
+  shoulders_distance = get_distance (left_shoulder_closest_point,
+                                     right_shoulder_closest_point);
+
+  if (right_shoulder_closest_point->i < node->i &&
+      right_shoulder_dist > shoulders_minimum_distance &&
+      right_shoulder_dist < shoulders_maximum_distance &&
+      left_shoulder_closest_point->i > node->i &&
+      left_shoulder_dist > shoulders_minimum_distance &&
+      left_shoulder_dist < shoulders_maximum_distance &&
+      ABS (right_shoulder_closest_point->y -
+           left_shoulder_closest_point->y) < shoulders_maximum_distance &&
+      shoulders_distance <= shoulders_maximum_distance)
+    {
+      *right_shoulder = right_shoulder_closest_point;
+      *left_shoulder = left_shoulder_closest_point;
+
+      g_slice_free (Node, shoulder_point);
+      return TRUE;
+    }
+
+  g_slice_free (Node, shoulder_point);
+  return FALSE;
+}
+
+static gboolean
+get_head_and_shoulders (GList   *nodes,
                         guint16 shoulders_minimum_distance,
                         guint16 shoulders_maximum_distance,
                         guint16 shoulders_offset,
-                        GList *extremas,
-                        Node *centroid,
-                        Node **head,
-                        Node **left_shoulder,
-                        Node **right_shoulder)
+                        GList  *extremas,
+                        Node   *centroid,
+                        Node  **head,
+                        Node  **left_shoulder,
+                        Node  **right_shoulder)
 {
-  Node *node, *shoulder_point;
-  Node *right_shoulder_closest_point, *left_shoulder_closest_point;
-  gint right_shoulder_dist, left_shoulder_dist, shoulders_distance;
+  Node *node;
   GList *current_extrema;
 
   for (current_extrema = g_list_first (extremas);
@@ -1324,56 +1386,19 @@ get_head_and_shoulders (GList *nodes,
     {
       node = (Node *) current_extrema->data;
 
-      if (node->j > centroid->j)
-        continue;
-
-      shoulder_point = g_slice_new0 (Node);
-      shoulder_point->x = node->x - shoulders_offset / 2;
-      shoulder_point->y = node->y + shoulders_offset;
-      shoulder_point->z = node->z;
-
-      right_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
-      if (right_shoulder_closest_point->i > centroid->i)
-        {
-          g_slice_free (Node, shoulder_point);
-          continue;
-        }
-
-      shoulder_point->x = node->x + shoulders_offset / 2;
-
-      left_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
-      if (left_shoulder_closest_point->i < centroid->i)
-        {
-          g_slice_free (Node, shoulder_point);
-          continue;
-        }
-
-      right_shoulder_dist = get_distance (node, right_shoulder_closest_point);
-      left_shoulder_dist = get_distance (node, left_shoulder_closest_point);
-      shoulders_distance = get_distance (left_shoulder_closest_point,
-                                         right_shoulder_closest_point);
-
-      if (right_shoulder_closest_point->i < node->i &&
-          right_shoulder_dist > shoulders_minimum_distance &&
-          right_shoulder_dist < shoulders_maximum_distance &&
-          left_shoulder_closest_point->i > node->i &&
-          left_shoulder_dist > shoulders_minimum_distance &&
-          left_shoulder_dist < shoulders_maximum_distance &&
-          ABS (right_shoulder_closest_point->y -
-               left_shoulder_closest_point->y) < shoulders_maximum_distance &&
-          shoulders_distance <= shoulders_maximum_distance)
+      if (check_if_node_can_be_head (nodes,
+                                     node,
+                                     shoulders_minimum_distance,
+                                     shoulders_maximum_distance,
+                                     shoulders_offset,
+                                     centroid,
+                                     left_shoulder,
+                                     right_shoulder))
         {
           *head = node;
-          *right_shoulder = right_shoulder_closest_point;
-          *left_shoulder = left_shoulder_closest_point;
-
-          g_slice_free (Node, shoulder_point);
           return TRUE;
         }
-
-      g_slice_free (Node, shoulder_point);
     }
-
   return FALSE;
 }
 
