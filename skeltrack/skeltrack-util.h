@@ -77,7 +77,6 @@ Label *       get_lowest_index_label           (Label **neighbor_labels);
 Label *       new_label                        (gint index);
 
 void          join_components_to_lowest        (GList *nodes,
-                                                GList *lowest_component,
                                                 Label *lowest_component_label,
                                                 guint horizontal_max_distance,
                                                 guint depth_max_distance);

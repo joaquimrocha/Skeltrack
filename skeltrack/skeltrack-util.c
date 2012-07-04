@@ -344,7 +344,6 @@ new_label (gint index)
 
 void
 join_components_to_lowest (GList *labels,
-                           GList *lowest_component,
                            Label *lowest_component_label,
                            guint horizontal_max_distance,
                            guint depth_max_distance)
@@ -377,7 +376,7 @@ join_components_to_lowest (GList *labels,
           if (node->label->bridge_node == NULL)
             {
               Node *closest_node =
-                get_closest_node_with_distances (lowest_component,
+                get_closest_node_with_distances (lowest_component_label->nodes,
                                                  node,
                                                  horizontal_max_distance,
                                                  horizontal_max_distance,
