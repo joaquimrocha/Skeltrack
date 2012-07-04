@@ -748,26 +748,43 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
     {
       priv->lowest_component = lowest_component_label->nodes;
 
-      join_components_to_lowest (nodes,
+      join_components_to_lowest (labels,
                                  priv->lowest_component,
-                                 lowest_component_label);
+                                 lowest_component_label,
+                                 priv->distance_threshold,
+                                 priv->hands_minimum_distance);
 
-      for (current_label = g_list_first (labels);
-           current_label != NULL;
-           current_label = g_list_next (current_label))
+      current_label = g_list_first (labels);
+      while (current_label != NULL)
         {
           Label *label;
           label = (Label *) current_label->data;
           if (label == lowest_component_label)
-            continue;
+            {
+              current_label = g_list_next (current_label);
+              continue;
+            }
 
-          /* @TODO: Remove labels that are too far away
-             (to avoid e.g. including objects away from the user) */
+          if (label->bridge_node == NULL)
+            {
+              nodes = remove_nodes_with_label (nodes,
+                                               priv->node_matrix,
+                                               priv->buffer_width,
+                                               label);
+
+              GList *link = current_label;
+              current_label = g_list_next (current_label);
+              labels = g_list_delete_link (labels, link);
+              free_label (label);
+              continue;
+            }
 
           label->bridge_node->neighbors =
             g_list_append (label->bridge_node->neighbors, label->to_node);
           label->to_node->neighbors = g_list_append (label->to_node->neighbors,
                                                      label->bridge_node);
+
+          current_label = g_list_next (current_label);
         }
     }
 

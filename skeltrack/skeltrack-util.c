@@ -85,6 +85,47 @@ unlink_node (Node *node)
   node->linked_nodes = NULL;
 }
 
+static Node *
+get_closest_node_with_distances (GList *node_list,
+                                 Node *from,
+                                 guint x_dist,
+                                 guint y_dist,
+                                 guint z_dist)
+{
+  Node *closest = NULL;
+  gint distance = -1;
+  GList *current_node;
+
+  /* @TODO: Replace this and use closest pair of points
+     algorithm and ensure O(n log n) instead of brute-force */
+
+  for (current_node = g_list_first (node_list);
+       current_node != NULL;
+       current_node = g_list_next (current_node))
+    {
+      guint dx, dy, dz;
+      Node *node;
+      gint current_distance;
+      node = (Node *) current_node->data;
+
+      dx = ABS (from->x - node->x);
+      dy = ABS (from->y - node->y);
+      dz = ABS (from->z - node->z);
+
+      if (dx > x_dist || dy > y_dist || dz > z_dist)
+        continue;
+
+      current_distance = sqrt (dx * dx + dy * dy + dz * dz);
+      if (closest == NULL || distance > current_distance)
+        {
+          closest = node;
+          distance = current_distance;
+        }
+    }
+
+  return closest;
+}
+
 Node *
 get_closest_node_to_joint (GList *extremas,
                            SkeltrackJoint *joint,
@@ -302,42 +343,50 @@ new_label (gint index)
 }
 
 void
-join_components_to_lowest (GList *nodes,
+join_components_to_lowest (GList *labels,
                            GList *lowest_component,
-                           Label *lowest_component_label)
+                           Label *lowest_component_label,
+                           guint horizontal_max_distance,
+                           guint depth_max_distance)
 {
-  GList *current_node;
+  GList *current_label;
 
-  for (current_node = g_list_first (nodes);
-       current_node != NULL;
-       current_node = g_list_next (current_node))
+  for (current_label = g_list_first (labels);
+       current_label != NULL;
+       current_label = g_list_next (current_label))
     {
-      Node *node;
-      node = (Node *) current_node->data;
-      if (node->label == lowest_component_label)
-        {
-          continue;
-        }
+      Label *label;
+      GList *current_node, *nodes;
 
-      if (node->label->bridge_node == NULL)
+      label = (Label *) current_label->data;
+      if (label == lowest_component_label)
+        continue;
+
+      nodes = label->nodes;
+      for (current_node = g_list_first (nodes);
+           current_node != NULL;
+           current_node = g_list_next (current_node))
         {
-          node->label->bridge_node = node;
-          node->label->to_node = get_closest_node (lowest_component, node);
-        }
-      else if (node->label->bridge_node != NULL &&
-               node->label->to_node != NULL)
-        {
-          Node *closest_node;
-          gint bridge_distance, distance;
-          bridge_distance = get_distance (node->label->bridge_node,
-                                          node->label->to_node);
-          closest_node = get_closest_node (lowest_component, node);
-          distance = get_distance (node,
-                                   closest_node);
-          if (bridge_distance > distance)
+          Node *node;
+          node = (Node *) current_node->data;
+          /* Skip nodes that belong to the same component or
+             that a not in the edge of their component */
+          if (g_list_length (node->neighbors) == 8)
+            continue;
+
+          if (node->label->bridge_node == NULL)
             {
-              node->label->bridge_node = node;
-              node->label->to_node = closest_node;
+              Node *closest_node =
+                get_closest_node_with_distances (lowest_component,
+                                                 node,
+                                                 horizontal_max_distance,
+                                                 horizontal_max_distance,
+                                                 depth_max_distance);
+              if (closest_node)
+                {
+                  node->label->bridge_node = node;
+                  node->label->to_node = closest_node;
+                }
             }
         }
     }
