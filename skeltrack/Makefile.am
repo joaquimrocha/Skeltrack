@@ -71,6 +71,10 @@ introspection_sources = $(skeltrack_HEADERS) $(source_c)
 @PRJ_GIR_TARGET_NAME@_LIBS = @PRJ_API_NAME@ m
 @PRJ_GIR_TARGET_NAME@_NAMESPACE = @PRJ_GIR_NAMESPACE@
 @PRJ_GIR_TARGET_NAME@_FILES = $(addprefix $(srcdir)/,$(introspection_sources))
+@PRJ_GIR_TARGET_NAME@_SCANNERFLAGS = \
+	--warn-all \
+	--c-include='skeltrack.h' \
+	--pkg-export=@PRJ_API_NAME@
 
 INTROSPECTION_GIRS += @PRJ_GIR_API_NAME@.gir
 
