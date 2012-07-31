@@ -107,6 +107,7 @@ struct _SkeltrackSkeletonPrivate
   guint buffer_height;
 
   GAsyncResult *track_joints_result;
+  GMutex track_joints_mutex;
 
   GList *graph;
   GList *labels;
@@ -122,8 +123,6 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_minimum_distance;
   guint16 shoulders_maximum_distance;
   guint16 shoulders_offset;
-
-  GMutex *dispatch_mutex;
 
   gboolean enable_smoothing;
   gfloat smoothing_factor;
@@ -414,7 +413,7 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->track_joints_result = NULL;
 
-  priv->dispatch_mutex = g_mutex_new ();
+  g_mutex_init (&priv->track_joints_mutex);
 
   priv->enable_smoothing = ENABLE_SMOOTHING_DEFAULT;
   priv->smoothing_factor = SMOOTHING_FACTOR_DEFAULT;
@@ -438,7 +437,7 @@ skeltrack_skeleton_finalize (GObject *obj)
 {
   SkeltrackSkeleton *self = SKELTRACK_SKELETON (obj);
 
-  g_mutex_free (self->priv->dispatch_mutex);
+  g_mutex_clear (&self->priv->track_joints_mutex);
 
   skeltrack_joint_list_free (self->priv->smoothed_joints);
   skeltrack_joint_list_free (self->priv->trend_joints);
@@ -2000,9 +1999,9 @@ track_joints_in_thread (GSimpleAsyncResult *res,
 
   joints = track_joints (self);
 
-  g_mutex_lock (self->priv->dispatch_mutex);
+  g_mutex_lock (&self->priv->track_joints_mutex);
   self->priv->track_joints_result = NULL;
-  g_mutex_unlock (self->priv->dispatch_mutex);
+  g_mutex_unlock (&self->priv->track_joints_mutex);
 
   g_simple_async_result_set_op_res_gpointer (res,
                                              joints,
@@ -2081,7 +2080,7 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
       return;
     }
 
-  g_mutex_lock (self->priv->dispatch_mutex);
+  g_mutex_lock (&self->priv->track_joints_mutex);
 
   self->priv->track_joints_result = G_ASYNC_RESULT (result);
 
@@ -2103,7 +2102,7 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
                                        G_PRIORITY_DEFAULT,
                                        cancellable);
 
-  g_mutex_unlock (self->priv->dispatch_mutex);
+  g_mutex_unlock (&self->priv->track_joints_mutex);
 }
 
 /**
