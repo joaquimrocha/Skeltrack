@@ -1394,9 +1394,14 @@ get_head_and_shoulders (GList *nodes,
           *head = node;
           *right_shoulder = right_shoulder_closest_point;
           *left_shoulder = left_shoulder_closest_point;
+
+          g_slice_free (Node, shoulder_point);
           return TRUE;
         }
+
+      g_slice_free (Node, shoulder_point);
     }
+
   return FALSE;
 }
 
@@ -1985,65 +1990,12 @@ track_joints (SkeltrackSkeleton *self)
         }
       skeltrack_joint_list_free (joints);
 
-      return smoothed;
+      joints = smoothed;
     }
+
+  g_list_free (extremas);
 
   return joints;
-}
-
-static gpointer
-dispatch_thread_func (gpointer _data)
-{
-  SkeltrackSkeleton *self = SKELTRACK_SKELETON (_data);
-  gboolean abort = FALSE;
-
-  while (! abort)
-    {
-      if (self->priv->track_joints_result != NULL)
-        {
-          SkeltrackJointList joints = track_joints (self);
-
-          g_mutex_lock (self->priv->dispatch_mutex);
-
-          GSimpleAsyncResult *res =
-            (GSimpleAsyncResult *) self->priv->track_joints_result;
-          g_simple_async_result_set_op_res_gpointer (res, joints, NULL);
-
-          g_simple_async_result_complete_in_idle (res);
-          g_object_unref (self->priv->track_joints_result);
-          self->priv->track_joints_result = NULL;
-
-          g_mutex_unlock (self->priv->dispatch_mutex);
-        }
-
-      if (self->priv->track_joints_result == NULL ||
-          self->priv->abort_dispatch_thread)
-        {
-          abort = TRUE;
-        }
-      else
-        {
-          g_usleep (1);
-        }
-    }
-
-  g_mutex_lock (self->priv->dispatch_mutex);
-  self->priv->dispatch_thread = NULL;
-  g_mutex_unlock (self->priv->dispatch_mutex);
-
-  return NULL;
-}
-
-static gboolean
-launch_dispatch_thread (SkeltrackSkeleton *self, GError **error)
-{
-  self->priv->abort_dispatch_thread = FALSE;
-
-  self->priv->dispatch_thread = g_thread_create (dispatch_thread_func,
-                                                 self,
-                                                 TRUE,
-                                                 error);
-  return self->priv->dispatch_thread != NULL;
 }
 
 static void
