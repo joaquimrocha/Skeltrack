@@ -123,9 +123,7 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_maximum_distance;
   guint16 shoulders_offset;
 
-  GThread *dispatch_thread;
   GMutex *dispatch_mutex;
-  gboolean abort_dispatch_thread;
 
   gboolean enable_smoothing;
   gfloat smoothing_factor;
@@ -175,6 +173,8 @@ static void     skeltrack_skeleton_get_property       (GObject *obj,
                                                        GParamSpec *pspec);
 
 static void     reset_joints_persistency_counter      (SkeltrackSkeletonPrivate *priv);
+
+static void     clean_tracking_resources              (SkeltrackSkeleton *self);
 
 G_DEFINE_TYPE (SkeltrackSkeleton, skeltrack_skeleton, G_TYPE_OBJECT)
 
@@ -414,7 +414,6 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->track_joints_result = NULL;
 
-  priv->dispatch_thread = NULL;
   priv->dispatch_mutex = g_mutex_new ();
 
   priv->enable_smoothing = ENABLE_SMOOTHING_DEFAULT;
@@ -429,33 +428,7 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 static void
 skeltrack_skeleton_dispose (GObject *obj)
 {
-  SkeltrackSkeleton *self = SKELTRACK_SKELETON (obj);
-
-  /* stop dispatch thread */
-  if (self->priv->dispatch_thread != NULL)
-    {
-      self->priv->abort_dispatch_thread = TRUE;
-      g_thread_join (self->priv->dispatch_thread);
-
-      g_mutex_lock (self->priv->dispatch_mutex);
-
-      self->priv->dispatch_thread = NULL;
-
-      g_slice_free1 (self->priv->buffer_width *
-                     self->priv->buffer_height * sizeof (gint),
-                     self->priv->distances_matrix);
-      self->priv->distances_matrix = NULL;
-
-      g_slice_free1 (self->priv->buffer_width *
-                     self->priv->buffer_height * sizeof (Node *),
-                     self->priv->node_matrix);
-      self->priv->node_matrix = NULL;
-
-      g_mutex_unlock (self->priv->dispatch_mutex);
-    }
-
-  skeltrack_joint_list_free (self->priv->smoothed_joints);
-  skeltrack_joint_list_free (self->priv->trend_joints);
+  /* TODO: cancel any cancellable to interrupt joints tracking operation */
 
   G_OBJECT_CLASS (skeltrack_skeleton_parent_class)->dispose (obj);
 }
@@ -466,6 +439,11 @@ skeltrack_skeleton_finalize (GObject *obj)
   SkeltrackSkeleton *self = SKELTRACK_SKELETON (obj);
 
   g_mutex_free (self->priv->dispatch_mutex);
+
+  skeltrack_joint_list_free (self->priv->smoothed_joints);
+  skeltrack_joint_list_free (self->priv->trend_joints);
+
+  clean_tracking_resources (self);
 
   G_OBJECT_CLASS (skeltrack_skeleton_parent_class)->finalize (obj);
 }
@@ -2012,6 +1990,27 @@ clean_tracking_resources (SkeltrackSkeleton *self)
   self->priv->node_matrix = NULL;
 }
 
+static void
+track_joints_in_thread (GSimpleAsyncResult *res,
+                        GObject            *object,
+                        GCancellable       *cancellable)
+{
+  SkeltrackSkeleton *self = SKELTRACK_SKELETON (object);
+  SkeltrackJointList joints;
+
+  joints = track_joints (self);
+
+  g_mutex_lock (self->priv->dispatch_mutex);
+  self->priv->track_joints_result = NULL;
+  g_mutex_unlock (self->priv->dispatch_mutex);
+
+  g_simple_async_result_set_op_res_gpointer (res,
+                                             joints,
+                                             NULL);
+
+  g_object_unref (res);
+}
+
 /* public methods */
 
 /**
@@ -2084,7 +2083,7 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
 
   g_mutex_lock (self->priv->dispatch_mutex);
 
-  self->priv->track_joints_result = (GAsyncResult *) result;
+  self->priv->track_joints_result = G_ASYNC_RESULT (result);
 
   /* @TODO: Set the cancellable */
 
@@ -2099,10 +2098,12 @@ skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
       self->priv->buffer_height = height;
     }
 
-  g_mutex_unlock (self->priv->dispatch_mutex);
+  g_simple_async_result_run_in_thread (result,
+                                       track_joints_in_thread,
+                                       G_PRIORITY_DEFAULT,
+                                       cancellable);
 
-  if (self->priv->dispatch_thread == NULL)
-    launch_dispatch_thread (self, NULL);
+  g_mutex_unlock (self->priv->dispatch_mutex);
 }
 
 /**
