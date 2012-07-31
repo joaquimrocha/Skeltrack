@@ -41,6 +41,7 @@ on_track_joints (GObject      *obj,
   BufferInfo *buffer_info;
   guint16 *reduced;
   gint width, height, reduced_width, reduced_height;
+  GError *error = NULL;
 
   buffer_info = (BufferInfo *) user_data;
   reduced = (guint16 *) buffer_info->reduced_buffer;
@@ -48,8 +49,6 @@ on_track_joints (GObject      *obj,
   height = buffer_info->height;
   reduced_width = buffer_info->reduced_width;
   reduced_height = buffer_info->reduced_height;
-
-  GError *error = NULL;
 
   list = skeltrack_skeleton_track_joints_finish (skeleton,
                                                  res,
@@ -66,9 +65,11 @@ on_track_joints (GObject      *obj,
       g_error_free (error);
     }
 
-  g_slice_free1 (width * height * sizeof (guint16), reduced);
+  g_slice_free1 (reduced_width * reduced_height * sizeof (guint16), reduced);
 
   g_slice_free (BufferInfo, buffer_info);
+
+  skeltrack_joint_list_free (list);
 }
 
 static void
