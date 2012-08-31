@@ -33,6 +33,7 @@ struct _Label {
   Node *bridge_node;
   Node *to_node;
   gint lower_screen_y;
+  gint higher_z;
 };
 
 struct _Node {
@@ -51,6 +52,10 @@ Node *        get_closest_node_to_joint        (GList *extremas,
                                                 gint *distance);
 
 Node *        get_closest_node                 (GList *node_list, Node *from);
+
+Label *       get_main_component               (GList *node_list,
+                                                Node  *from,
+                                                guint  min_nr_nodes);
 
 Label *       label_find                       (Label *label);
 
@@ -76,7 +81,7 @@ Label *       get_lowest_index_label           (Label **neighbor_labels);
 
 Label *       new_label                        (gint index);
 
-void          join_components_to_lowest        (GList *nodes,
+void          join_components_to_main          (GList *nodes,
                                                 Label *lowest_component_label,
                                                 guint horizontal_max_distance,
                                                 guint depth_max_distance);
