@@ -77,6 +77,7 @@
 #define JOINTS_PERSISTENCY_DEFAULT 3
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
+#define DEFAULT_FOCUS_POINT_Z 1000
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -102,6 +103,8 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_minimum_distance;
   guint16 shoulders_maximum_distance;
   guint16 shoulders_offset;
+
+  Node *focus_node;
 
   gboolean enable_smoothing;
   SmoothData smooth_data;
@@ -382,6 +385,11 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->shoulders_maximum_distance = SHOULDERS_MAXIMUM_DISTANCE;
   priv->shoulders_offset = SHOULDERS_OFFSET;
 
+  priv->focus_node = g_slice_new0 (Node);
+  priv->focus_node->x = 0;
+  priv->focus_node->y = 0;
+  priv->focus_node->z = DEFAULT_FOCUS_POINT_Z;
+
   priv->track_joints_result = NULL;
 
   g_mutex_init (&priv->track_joints_mutex);
@@ -418,6 +426,8 @@ skeltrack_skeleton_finalize (GObject *obj)
   skeltrack_joint_free (self->priv->previous_head);
 
   clean_tracking_resources (self);
+
+  g_slice_free (Node, self->priv->focus_node);
 
   G_OBJECT_CLASS (skeltrack_skeleton_parent_class)->finalize (obj);
 }
@@ -573,8 +583,7 @@ join_neighbor (SkeltrackSkeleton *self,
 }
 
 GList *
-make_graph (SkeltrackSkeleton *self, GList **label_list, gint focus_i, gint
-    focus_j, gint focus_z)
+make_graph (SkeltrackSkeleton *self, GList **label_list)
 {
   SkeltrackSkeletonPrivate *priv;
   gint i, j, n;
@@ -720,22 +729,12 @@ make_graph (SkeltrackSkeleton *self, GList **label_list, gint focus_i, gint
         }
     }
 
-  /* FIXME make a property variable out of this */
   /* FIXME normalize nr_nodes */
   gint min_nr_nodes_torso = 100;
 
-  Node *focus_node = g_slice_new0 (Node);
-  focus_node->i = focus_i;
-  focus_node->j = focus_j;
-  focus_node->z = focus_z;
-  convert_screen_coords_to_mm (priv->buffer_width, priv->buffer_height,
-      priv->dimension_reduction, focus_i, focus_j, focus_z,
-      &(focus_node->x), &(focus_node->y));
-
-  main_component_label = get_main_component (nodes, focus_node,
+  main_component_label = get_main_component (nodes, priv->focus_node,
       min_nr_nodes_torso);
 
-  g_slice_free (Node, focus_node);
 
   current_label = g_list_first (labels);
   while (current_label != NULL)
@@ -1312,15 +1311,8 @@ track_joints (SkeltrackSkeleton *self)
   GList *extremas;
   SkeltrackJointList joints = NULL;
   SkeltrackJointList smoothed = NULL;
-  /* FIXME move this to a property */
-  gint focus_i, focus_j, focus_z;
 
-  focus_i = self->priv->buffer_width/2;
-  focus_j = self->priv->buffer_height/2;
-  focus_z = 1500;
-
-  self->priv->graph = make_graph (self, &self->priv->labels, focus_i,
-      focus_j, focus_z);
+  self->priv->graph = make_graph (self, &self->priv->labels);
   centroid = get_centroid (self);
   extremas = get_extremas (self, centroid);
 
@@ -1501,6 +1493,53 @@ GObject *
 skeltrack_skeleton_new (void)
 {
   return g_object_new (SKELTRACK_TYPE_SKELETON, NULL);
+}
+
+/**
+  * skeltrack_skeleton_set_focus_point:
+  * @self: The #SkeltrackSkeleton
+  * @x: The x coordinate of the focus point.
+  * @y: The y coordinate of the focus point.
+  * @z: The z coordinate of the focus point.
+  *
+  * Gets the focus point which is the origin from where the tracking will
+  * start. The coordinates will be in mm.
+  *
+  **/
+void
+skeltrack_skeleton_get_focus_point (SkeltrackSkeleton   *self,
+                                    gint                *x,
+                                    gint                *y,
+                                    gint                *z)
+{
+  *x = self->priv->focus_node->x;
+  *y = self->priv->focus_node->y;
+  *z = self->priv->focus_node->z;
+}
+
+/**
+  * skeltrack_skeleton_set_focus_point:
+  * @self: The #SkeltrackSkeleton
+  * @x: The x coordinate of the focus point.
+  * @y: The y coordinate of the focus point.
+  * @z: The z coordinate of the focus point.
+  *
+  * Sets the focus point which is the origin from where the tracking will
+  * start. The coordinates should be in mm.
+  *
+  * If this method is not called the default values are @x = 0, @y = 0,
+  * @z = 1000, that is, in the center of the screen and at 1m from the
+  * camera.
+  **/
+void
+skeltrack_skeleton_set_focus_point (SkeltrackSkeleton   *self,
+                                    gint                 x,
+                                    gint                 y,
+                                    gint                 z)
+{
+  self->priv->focus_node->x = x;
+  self->priv->focus_node->y = y;
+  self->priv->focus_node->z = z;
 }
 
 /**
