@@ -92,7 +92,7 @@ struct _SkeltrackSkeletonPrivate
   GList *labels;
   Node **node_matrix;
   gint  *distances_matrix;
-  GList *lowest_component;
+  GList *main_component;
 
   guint16 dimension_reduction;
   guint16 distance_threshold;
@@ -368,7 +368,7 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->graph = NULL;
   priv->labels = NULL;
-  priv->lowest_component = NULL;
+  priv->main_component = NULL;
   priv->node_matrix = NULL;
   priv->distances_matrix = NULL;
 
@@ -573,7 +573,8 @@ join_neighbor (SkeltrackSkeleton *self,
 }
 
 GList *
-make_graph (SkeltrackSkeleton *self, GList **label_list)
+make_graph (SkeltrackSkeleton *self, GList **label_list, gint focus_i, gint
+    focus_j, gint focus_z)
 {
   SkeltrackSkeletonPrivate *priv;
   gint i, j, n;
@@ -581,7 +582,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
   GList *nodes = NULL;
   GList *labels = NULL;
   GList *current_label;
-  Label *lowest_component_label = NULL;
+  Label *main_component_label = NULL;
   gint index = 0;
   gint next_label = -1;
   guint16 value;
@@ -699,15 +700,42 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       node->label->nodes = g_list_append (node->label->nodes,
                                           node);
 
-      /* Assign lower node so we can extract the
-         lower graph's component */
-      if (g_list_length (node->label->nodes) >= priv->min_nr_nodes &&
-          (node->label->lower_screen_y == -1 ||
-           node->j > node->label->lower_screen_y))
+      if (g_list_length (node->label->nodes) >= priv->min_nr_nodes)
         {
-          node->label->lower_screen_y = node->j;
+          /* Assign lower node so we can extract the
+             lower graph's component */
+          if (node->label->lower_screen_y == -1 ||
+             node->j > node->label->lower_screen_y)
+          {
+            node->label->lower_screen_y = node->j;
+          }
+
+          /* Assign farther to the camera node so we
+             can extract the main graph component */
+          if (node->label->higher_z == -1 ||
+             node->z > node->label->higher_z)
+            {
+              node->label->higher_z = node->z;
+            }
         }
     }
+
+  /* FIXME make a property variable out of this */
+  /* FIXME normalize nr_nodes */
+  gint min_nr_nodes_torso = 100;
+
+  Node *focus_node = g_slice_new0 (Node);
+  focus_node->i = focus_i;
+  focus_node->j = focus_j;
+  focus_node->z = focus_z;
+  convert_screen_coords_to_mm (priv->buffer_width, priv->buffer_height,
+      priv->dimension_reduction, focus_i, focus_j, focus_z,
+      &(focus_node->x), &(focus_node->y));
+
+  main_component_label = get_main_component (nodes, focus_node,
+      min_nr_nodes_torso);
+
+  g_slice_free (Node, focus_node);
 
   current_label = g_list_first (labels);
   while (current_label != NULL)
@@ -731,32 +759,22 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
           continue;
         }
 
-      /* Get the lowest component label */
-      if (lowest_component_label == NULL ||
-          lowest_component_label->lower_screen_y < label->lower_screen_y ||
-          (lowest_component_label->lower_screen_y == label->lower_screen_y &&
-           g_list_length (label->nodes) >
-           g_list_length (lowest_component_label->nodes)))
-        {
-          lowest_component_label = label;
-        }
-
       current_label = g_list_next (current_label);
     }
 
   if (labels)
     {
-      join_components_to_lowest (labels,
-                                 lowest_component_label,
-                                 priv->distance_threshold,
-                                 priv->hands_minimum_distance);
+      join_components_to_main (labels,
+                               main_component_label,
+                               priv->distance_threshold,
+                               priv->hands_minimum_distance);
 
       current_label = g_list_first (labels);
       while (current_label != NULL)
         {
           Label *label;
           label = (Label *) current_label->data;
-          if (label == lowest_component_label)
+          if (label == main_component_label)
             {
               current_label = g_list_next (current_label);
               continue;
@@ -784,7 +802,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
           current_label = g_list_next (current_label);
         }
 
-      priv->lowest_component = lowest_component_label->nodes;
+      priv->main_component = main_component_label->nodes;
     }
 
   *label_list = labels;
@@ -803,10 +821,10 @@ get_centroid (SkeltrackSkeleton *self)
   Node *cent = NULL;
   Node *centroid = NULL;
 
-  if (self->priv->lowest_component == NULL)
+  if (self->priv->main_component == NULL)
     return NULL;
 
-  for (node_list = g_list_first (self->priv->lowest_component);
+  for (node_list = g_list_first (self->priv->main_component);
        node_list != NULL;
        node_list = g_list_next (node_list))
     {
@@ -817,7 +835,7 @@ get_centroid (SkeltrackSkeleton *self)
       avg_z += node->z;
     }
 
-  length = g_list_length (self->priv->lowest_component);
+  length = g_list_length (self->priv->main_component);
   cent = g_slice_new0 (Node);
   cent->x = avg_x / length;
   cent->y = avg_y / length;
@@ -837,10 +855,10 @@ get_lowest (SkeltrackSkeleton *self, Node *centroid)
   Node *lowest = NULL;
   /* @TODO: Use the node_matrix instead of the lowest
      component to look for the lowest node as it's faster. */
-  if (self->priv->lowest_component != NULL)
+  if (self->priv->main_component != NULL)
     {
       GList *node_list;
-      for (node_list = g_list_first (self->priv->lowest_component);
+      for (node_list = g_list_first (self->priv->main_component);
            node_list != NULL;
            node_list = g_list_next (node_list))
         {
@@ -1294,8 +1312,15 @@ track_joints (SkeltrackSkeleton *self)
   GList *extremas;
   SkeltrackJointList joints = NULL;
   SkeltrackJointList smoothed = NULL;
+  /* FIXME move this to a property */
+  gint focus_i, focus_j, focus_z;
 
-  self->priv->graph = make_graph (self, &self->priv->labels);
+  focus_i = self->priv->buffer_width/2;
+  focus_j = self->priv->buffer_height/2;
+  focus_z = 1500;
+
+  self->priv->graph = make_graph (self, &self->priv->labels, focus_i,
+      focus_j, focus_z);
   centroid = get_centroid (self);
   extremas = get_extremas (self, centroid);
 
@@ -1364,7 +1389,7 @@ track_joints (SkeltrackSkeleton *self)
 
   self->priv->buffer = NULL;
 
-  self->priv->lowest_component = NULL;
+  self->priv->main_component = NULL;
 
   clean_nodes (self->priv->graph);
   g_list_free (self->priv->graph);

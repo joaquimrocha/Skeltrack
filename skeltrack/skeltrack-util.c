@@ -199,6 +199,42 @@ get_closest_node (GList *node_list, Node *from)
 }
 
 Label *
+get_main_component (GList *node_list, Node *from, guint min_nr_nodes)
+{
+  Label *main_component = NULL;
+  gint distance = -1;
+  GList *current_node;
+
+  for (current_node = g_list_first (node_list);
+       current_node != NULL;
+       current_node = g_list_next (current_node))
+  {
+    Node *node;
+    Label *label;
+    gint current_distance;
+    node = (Node *) current_node->data;
+    label = node->label;
+
+    if (main_component == NULL)
+      {
+        main_component = label;
+        distance = get_distance (node, from);
+        continue;
+      }
+
+    current_distance = get_distance (node, from);
+    if (current_distance < distance && g_list_length (label->nodes) >
+        min_nr_nodes)
+      {
+        main_component = label;
+        distance = current_distance;
+      }
+  }
+
+  return main_component;
+}
+
+Label *
 label_find (Label *label)
 {
   Label *parent;
@@ -338,15 +374,16 @@ new_label (gint index)
   label->bridge_node = NULL;
   label->to_node = NULL;
   label->lower_screen_y = -1;
+  label->higher_z = -1;
 
   return label;
 }
 
 void
-join_components_to_lowest (GList *labels,
-                           Label *lowest_component_label,
-                           guint horizontal_max_distance,
-                           guint depth_max_distance)
+join_components_to_main (GList *labels,
+                         Label *main_component_label,
+                         guint horizontal_max_distance,
+                         guint depth_max_distance)
 {
   GList *current_label;
 
@@ -358,8 +395,14 @@ join_components_to_lowest (GList *labels,
       GList *current_node, *nodes;
 
       label = (Label *) current_label->data;
-      if (label == lowest_component_label)
+      if (label == main_component_label)
         continue;
+
+      /* Skip nodes behind main component */
+      if (label->higher_z > main_component_label->higher_z)
+        {
+          continue;
+        }
 
       nodes = label->nodes;
       for (current_node = g_list_first (nodes);
@@ -376,7 +419,7 @@ join_components_to_lowest (GList *labels,
           if (node->label->bridge_node == NULL)
             {
               Node *closest_node =
-                get_closest_node_with_distances (lowest_component_label->nodes,
+                get_closest_node_with_distances (main_component_label->nodes,
                                                  node,
                                                  horizontal_max_distance,
                                                  horizontal_max_distance,
