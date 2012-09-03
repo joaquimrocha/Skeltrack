@@ -199,7 +199,7 @@ get_closest_node (GList *node_list, Node *from)
 }
 
 Label *
-get_main_component (GList *node_list, Node *from, guint min_nr_nodes)
+get_main_component (GList *node_list, Node *from, gdouble min_normalized_nr_nodes)
 {
   Label *main_component = NULL;
   gint distance = -1;
@@ -223,8 +223,8 @@ get_main_component (GList *node_list, Node *from, guint min_nr_nodes)
       }
 
     current_distance = get_distance (node, from);
-    if (current_distance < distance && g_list_length (label->nodes) >
-        min_nr_nodes)
+    if (current_distance < distance &&
+        label->normalized_num_nodes > min_normalized_nr_nodes)
       {
         main_component = label;
         distance = current_distance;
@@ -375,6 +375,8 @@ new_label (gint index)
   label->to_node = NULL;
   label->lower_screen_y = -1;
   label->higher_z = -1;
+  label->lower_z = -1;
+  label->normalized_num_nodes = -1;
 
   return label;
 }

@@ -34,6 +34,8 @@ struct _Label {
   Node *to_node;
   gint lower_screen_y;
   gint higher_z;
+  gint lower_z;
+  gdouble normalized_num_nodes;
 };
 
 struct _Node {
@@ -53,9 +55,9 @@ Node *        get_closest_node_to_joint        (GList *extremas,
 
 Node *        get_closest_node                 (GList *node_list, Node *from);
 
-Label *       get_main_component               (GList *node_list,
-                                                Node  *from,
-                                                guint  min_nr_nodes);
+Label *       get_main_component               (GList   *node_list,
+                                                Node    *from,
+                                                gdouble  min_normalized_nr_nodes);
 
 Label *       label_find                       (Label *label);
 
