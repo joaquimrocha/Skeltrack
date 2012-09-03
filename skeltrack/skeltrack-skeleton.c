@@ -78,7 +78,7 @@
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
 #define DEFAULT_FOCUS_POINT_Z 1000
-#define NORMALIZED_MIN_NR_NODES_TORSO 100000
+#define NORMALIZED_MIN_NR_NODES_TORSO 5000000
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -745,9 +745,11 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       label = (Label *) current_label->data;
       current_nodes = label->nodes;
 
-      label->normalized_num_nodes = g_list_length (current_nodes) *
-                                   (label->higher_z - label->lower_z) *
-                                    DIMENSION_REDUCTION;
+      label->normalized_num_nodes =  g_list_length (current_nodes) *
+                                     ((label->higher_z - label->lower_z)/2 +
+                                     label->lower_z) *
+                                     log(DIMENSION_REDUCTION) *
+                                     DIMENSION_REDUCTION;
     }
 
   main_component_label = get_main_component (nodes,
