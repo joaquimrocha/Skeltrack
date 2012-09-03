@@ -78,6 +78,7 @@
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
 #define DEFAULT_FOCUS_POINT_Z 1000
+#define NORMALIZED_MIN_NR_NODES_TORSO 16.0
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -709,32 +710,51 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       node->label->nodes = g_list_append (node->label->nodes,
                                           node);
 
-      if (g_list_length (node->label->nodes) >= priv->min_nr_nodes)
-        {
-          /* Assign lower node so we can extract the
-             lower graph's component */
-          if (node->label->lower_screen_y == -1 ||
-             node->j > node->label->lower_screen_y)
-          {
-            node->label->lower_screen_y = node->j;
-          }
+      /* Assign lower node so we can extract the
+         lower graph's component */
+      if (node->label->lower_screen_y == -1 ||
+         node->j > node->label->lower_screen_y)
+      {
+        node->label->lower_screen_y = node->j;
+      }
 
-          /* Assign farther to the camera node so we
-             can extract the main graph component */
-          if (node->label->higher_z == -1 ||
-             node->z > node->label->higher_z)
-            {
-              node->label->higher_z = node->z;
-            }
+      /* Assign farther to the camera node so we
+         can extract the main graph component */
+      if (node->label->higher_z == -1 ||
+         node->z > node->label->higher_z)
+        {
+          node->label->higher_z = node->z;
+        }
+
+      /* Assign closer to the camera node so we
+         can extract the main graph component */
+      if (node->label->lower_z == -1 ||
+         node->z < node->label->lower_z)
+        {
+          node->label->lower_z = node->z;
         }
     }
 
-  /* FIXME normalize nr_nodes */
-  gint min_nr_nodes_torso = 100;
+  for (current_label = g_list_first (labels);
+       current_label != NULL;
+       current_label = g_list_next (current_label))
+    {
+      Label *label;
+      GList *current_nodes;
 
-  main_component_label = get_main_component (nodes, priv->focus_node,
-      min_nr_nodes_torso);
+      label = (Label *) current_label->data;
+      current_nodes = label->nodes;
 
+      label->normalized_num_nodes =  g_list_length (current_nodes) *
+                                     ((label->higher_z - label->lower_z)/2 +
+                                     label->lower_z) *
+                                     (pow (DIMENSION_REDUCTION, 2)/2) /
+                                     1000000;
+    }
+
+  main_component_label = get_main_component (nodes,
+                                             priv->focus_node,
+                                             NORMALIZED_MIN_NR_NODES_TORSO);
 
   current_label = g_list_first (labels);
   while (current_label != NULL)
