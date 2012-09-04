@@ -30,7 +30,7 @@
 #define WIDTH  640
 #define HEIGHT 480
 
-#define NUMBER_OF_FILES 10
+#define NUMBER_OF_FILES 12
 #define RESOURCES_FOLDER "./resources/"
 static gchar *DEPTH_FILES[NUMBER_OF_FILES] = {
   RESOURCES_FOLDER "depth-data-1028894671",
@@ -42,7 +42,9 @@ static gchar *DEPTH_FILES[NUMBER_OF_FILES] = {
   RESOURCES_FOLDER "depth-data-1051883281",
   RESOURCES_FOLDER "depth-data-1064898470",
   RESOURCES_FOLDER "depth-data-1078881076",
-  RESOURCES_FOLDER "depth-data-1234568668"};
+  RESOURCES_FOLDER "depth-data-1234568668",
+  RESOURCES_FOLDER "depth-data-1399145206",
+  RESOURCES_FOLDER "depth-data-82823944"};
 
 typedef struct
 {
