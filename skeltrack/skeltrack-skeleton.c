@@ -77,6 +77,8 @@
 #define JOINTS_PERSISTENCY_DEFAULT 3
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
+#define DEFAULT_FOCUS_POINT_Z 1000
+#define TORSO_MINIMUM_NUMBER_NODES_DEFAULT 16.0
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -92,7 +94,7 @@ struct _SkeltrackSkeletonPrivate
   GList *labels;
   Node **node_matrix;
   gint  *distances_matrix;
-  GList *lowest_component;
+  GList *main_component;
 
   guint16 dimension_reduction;
   guint16 distance_threshold;
@@ -103,8 +105,12 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_maximum_distance;
   guint16 shoulders_offset;
 
+  Node *focus_node;
+
   gboolean enable_smoothing;
   SmoothData smooth_data;
+
+  gfloat torso_minimum_number_nodes;
 
   SkeltrackJoint *previous_head;
 };
@@ -125,7 +131,8 @@ enum
     PROP_SHOULDERS_OFFSET,
     PROP_SMOOTHING_FACTOR,
     PROP_JOINTS_PERSISTENCY,
-    PROP_ENABLE_SMOOTHING
+    PROP_ENABLE_SMOOTHING,
+    PROP_TORSO_MINIMUM_NUMBER_NODES
   };
 
 
@@ -349,6 +356,25 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                                G_PARAM_READWRITE |
                                                G_PARAM_STATIC_STRINGS));
 
+  /**
+    * SkeltrackSkeleton:torso-minimum-number-nodes
+    *
+    * Minimum number of nodes for a component to be considered torso.
+    *
+    **/
+  g_object_class_install_property (obj_class,
+                         PROP_TORSO_MINIMUM_NUMBER_NODES,
+                         g_param_spec_float ("torso-minimum-number-nodes",
+                                             "Torso minimum number of nodes",
+                                             "Minimum number of nodes for a "
+                                             "component to be considered "
+                                             "torso",
+                                             0,
+                                             1000,
+                                             TORSO_MINIMUM_NUMBER_NODES_DEFAULT,
+                                             G_PARAM_READWRITE |
+                                             G_PARAM_STATIC_STRINGS));
+
   /* add private structure */
   g_type_class_add_private (obj_class, sizeof (SkeltrackSkeletonPrivate));
 }
@@ -368,7 +394,7 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->graph = NULL;
   priv->labels = NULL;
-  priv->lowest_component = NULL;
+  priv->main_component = NULL;
   priv->node_matrix = NULL;
   priv->distances_matrix = NULL;
 
@@ -382,6 +408,11 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->shoulders_maximum_distance = SHOULDERS_MAXIMUM_DISTANCE;
   priv->shoulders_offset = SHOULDERS_OFFSET;
 
+  priv->focus_node = g_slice_new0 (Node);
+  priv->focus_node->x = 0;
+  priv->focus_node->y = 0;
+  priv->focus_node->z = DEFAULT_FOCUS_POINT_Z;
+
   priv->track_joints_result = NULL;
 
   g_mutex_init (&priv->track_joints_mutex);
@@ -393,6 +424,8 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->smooth_data.joints_persistency = JOINTS_PERSISTENCY_DEFAULT;
   for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
     priv->smooth_data.joints_persistency_counter[i] = JOINTS_PERSISTENCY_DEFAULT;
+
+  priv->torso_minimum_number_nodes = TORSO_MINIMUM_NUMBER_NODES_DEFAULT;
 
   priv->previous_head = NULL;
 }
@@ -418,6 +451,8 @@ skeltrack_skeleton_finalize (GObject *obj)
   skeltrack_joint_free (self->priv->previous_head);
 
   clean_tracking_resources (self);
+
+  g_slice_free (Node, self->priv->focus_node);
 
   G_OBJECT_CLASS (skeltrack_skeleton_parent_class)->finalize (obj);
 }
@@ -473,6 +508,10 @@ skeltrack_skeleton_set_property (GObject      *obj,
 
     case PROP_ENABLE_SMOOTHING:
       self->priv->enable_smoothing = g_value_get_boolean (value);
+      break;
+
+    case PROP_TORSO_MINIMUM_NUMBER_NODES:
+      self->priv->torso_minimum_number_nodes = g_value_get_float (value);
       break;
 
     default:
@@ -533,6 +572,10 @@ skeltrack_skeleton_get_property (GObject    *obj,
       g_value_set_boolean (value, self->priv->enable_smoothing);
       break;
 
+    case PROP_TORSO_MINIMUM_NUMBER_NODES:
+      g_value_set_float (value, self->priv->torso_minimum_number_nodes);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
       break;
@@ -581,7 +624,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
   GList *nodes = NULL;
   GList *labels = NULL;
   GList *current_label;
-  Label *lowest_component_label = NULL;
+  Label *main_component_label = NULL;
   gint index = 0;
   gint next_label = -1;
   guint16 value;
@@ -701,13 +744,49 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
 
       /* Assign lower node so we can extract the
          lower graph's component */
-      if (g_list_length (node->label->nodes) >= priv->min_nr_nodes &&
-          (node->label->lower_screen_y == -1 ||
-           node->j > node->label->lower_screen_y))
+      if (node->label->lower_screen_y == -1 ||
+         node->j > node->label->lower_screen_y)
+      {
+        node->label->lower_screen_y = node->j;
+      }
+
+      /* Assign farther to the camera node so we
+         can extract the main graph component */
+      if (node->label->higher_z == -1 ||
+         node->z > node->label->higher_z)
         {
-          node->label->lower_screen_y = node->j;
+          node->label->higher_z = node->z;
+        }
+
+      /* Assign closer to the camera node so we
+         can extract the main graph component */
+      if (node->label->lower_z == -1 ||
+         node->z < node->label->lower_z)
+        {
+          node->label->lower_z = node->z;
         }
     }
+
+  for (current_label = g_list_first (labels);
+       current_label != NULL;
+       current_label = g_list_next (current_label))
+    {
+      Label *label;
+      GList *current_nodes;
+
+      label = (Label *) current_label->data;
+      current_nodes = label->nodes;
+
+      label->normalized_num_nodes =  g_list_length (current_nodes) *
+                                     ((label->higher_z - label->lower_z)/2 +
+                                     label->lower_z) *
+                                     (pow (DIMENSION_REDUCTION, 2)/2) /
+                                     1000000;
+    }
+
+  main_component_label = get_main_component (nodes,
+                                             priv->focus_node,
+                                             priv->torso_minimum_number_nodes);
 
   current_label = g_list_first (labels);
   while (current_label != NULL)
@@ -731,32 +810,22 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
           continue;
         }
 
-      /* Get the lowest component label */
-      if (lowest_component_label == NULL ||
-          lowest_component_label->lower_screen_y < label->lower_screen_y ||
-          (lowest_component_label->lower_screen_y == label->lower_screen_y &&
-           g_list_length (label->nodes) >
-           g_list_length (lowest_component_label->nodes)))
-        {
-          lowest_component_label = label;
-        }
-
       current_label = g_list_next (current_label);
     }
 
   if (labels)
     {
-      join_components_to_lowest (labels,
-                                 lowest_component_label,
-                                 priv->distance_threshold,
-                                 priv->hands_minimum_distance);
+      join_components_to_main (labels,
+                               main_component_label,
+                               priv->distance_threshold,
+                               priv->hands_minimum_distance);
 
       current_label = g_list_first (labels);
       while (current_label != NULL)
         {
           Label *label;
           label = (Label *) current_label->data;
-          if (label == lowest_component_label)
+          if (label == main_component_label)
             {
               current_label = g_list_next (current_label);
               continue;
@@ -784,7 +853,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
           current_label = g_list_next (current_label);
         }
 
-      priv->lowest_component = lowest_component_label->nodes;
+      priv->main_component = main_component_label->nodes;
     }
 
   *label_list = labels;
@@ -803,10 +872,10 @@ get_centroid (SkeltrackSkeleton *self)
   Node *cent = NULL;
   Node *centroid = NULL;
 
-  if (self->priv->lowest_component == NULL)
+  if (self->priv->main_component == NULL)
     return NULL;
 
-  for (node_list = g_list_first (self->priv->lowest_component);
+  for (node_list = g_list_first (self->priv->main_component);
        node_list != NULL;
        node_list = g_list_next (node_list))
     {
@@ -817,7 +886,7 @@ get_centroid (SkeltrackSkeleton *self)
       avg_z += node->z;
     }
 
-  length = g_list_length (self->priv->lowest_component);
+  length = g_list_length (self->priv->main_component);
   cent = g_slice_new0 (Node);
   cent->x = avg_x / length;
   cent->y = avg_y / length;
@@ -837,10 +906,10 @@ get_lowest (SkeltrackSkeleton *self, Node *centroid)
   Node *lowest = NULL;
   /* @TODO: Use the node_matrix instead of the lowest
      component to look for the lowest node as it's faster. */
-  if (self->priv->lowest_component != NULL)
+  if (self->priv->main_component != NULL)
     {
       GList *node_list;
-      for (node_list = g_list_first (self->priv->lowest_component);
+      for (node_list = g_list_first (self->priv->main_component);
            node_list != NULL;
            node_list = g_list_next (node_list))
         {
@@ -1364,7 +1433,7 @@ track_joints (SkeltrackSkeleton *self)
 
   self->priv->buffer = NULL;
 
-  self->priv->lowest_component = NULL;
+  self->priv->main_component = NULL;
 
   clean_nodes (self->priv->graph);
   g_list_free (self->priv->graph);
@@ -1476,6 +1545,53 @@ GObject *
 skeltrack_skeleton_new (void)
 {
   return g_object_new (SKELTRACK_TYPE_SKELETON, NULL);
+}
+
+/**
+  * skeltrack_skeleton_set_focus_point:
+  * @self: The #SkeltrackSkeleton
+  * @x: The x coordinate of the focus point.
+  * @y: The y coordinate of the focus point.
+  * @z: The z coordinate of the focus point.
+  *
+  * Gets the focus point which is the origin from where the tracking will
+  * start. The coordinates will be in mm.
+  *
+  **/
+void
+skeltrack_skeleton_get_focus_point (SkeltrackSkeleton   *self,
+                                    gint                *x,
+                                    gint                *y,
+                                    gint                *z)
+{
+  *x = self->priv->focus_node->x;
+  *y = self->priv->focus_node->y;
+  *z = self->priv->focus_node->z;
+}
+
+/**
+  * skeltrack_skeleton_set_focus_point:
+  * @self: The #SkeltrackSkeleton
+  * @x: The x coordinate of the focus point.
+  * @y: The y coordinate of the focus point.
+  * @z: The z coordinate of the focus point.
+  *
+  * Sets the focus point which is the origin from where the tracking will
+  * start. The coordinates should be in mm.
+  *
+  * If this method is not called the default values are @x = 0, @y = 0,
+  * @z = 1000, that is, in the center of the screen and at 1m from the
+  * camera.
+  **/
+void
+skeltrack_skeleton_set_focus_point (SkeltrackSkeleton   *self,
+                                    gint                 x,
+                                    gint                 y,
+                                    gint                 z)
+{
+  self->priv->focus_node->x = x;
+  self->priv->focus_node->y = y;
+  self->priv->focus_node->z = z;
 }
 
 /**
