@@ -78,7 +78,7 @@
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
 #define DEFAULT_FOCUS_POINT_Z 1000
-#define NORMALIZED_MIN_NR_NODES_TORSO 16.0
+#define TORSO_MINIMUM_NUMBER_NODES_DEFAULT 16.0
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -110,6 +110,8 @@ struct _SkeltrackSkeletonPrivate
   gboolean enable_smoothing;
   SmoothData smooth_data;
 
+  gfloat torso_minimum_number_nodes;
+
   SkeltrackJoint *previous_head;
 };
 
@@ -129,7 +131,8 @@ enum
     PROP_SHOULDERS_OFFSET,
     PROP_SMOOTHING_FACTOR,
     PROP_JOINTS_PERSISTENCY,
-    PROP_ENABLE_SMOOTHING
+    PROP_ENABLE_SMOOTHING,
+    PROP_TORSO_MINIMUM_NUMBER_NODES
   };
 
 
@@ -353,6 +356,25 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                                G_PARAM_READWRITE |
                                                G_PARAM_STATIC_STRINGS));
 
+  /**
+    * SkeltrackSkeleton:torso-minimum-number-nodes
+    *
+    * Minimum number of nodes for a component to be considered torso.
+    *
+    **/
+  g_object_class_install_property (obj_class,
+                         PROP_TORSO_MINIMUM_NUMBER_NODES,
+                         g_param_spec_float ("torso-minimum-number-nodes",
+                                             "Torso minimum number of nodes",
+                                             "Minimum number of nodes for a "
+                                             "component to be considered "
+                                             "torso",
+                                             0,
+                                             1000,
+                                             TORSO_MINIMUM_NUMBER_NODES_DEFAULT,
+                                             G_PARAM_READWRITE |
+                                             G_PARAM_STATIC_STRINGS));
+
   /* add private structure */
   g_type_class_add_private (obj_class, sizeof (SkeltrackSkeletonPrivate));
 }
@@ -402,6 +424,8 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->smooth_data.joints_persistency = JOINTS_PERSISTENCY_DEFAULT;
   for (i = 0; i < SKELTRACK_JOINT_MAX_JOINTS; i++)
     priv->smooth_data.joints_persistency_counter[i] = JOINTS_PERSISTENCY_DEFAULT;
+
+  priv->torso_minimum_number_nodes = TORSO_MINIMUM_NUMBER_NODES_DEFAULT;
 
   priv->previous_head = NULL;
 }
@@ -486,6 +510,10 @@ skeltrack_skeleton_set_property (GObject      *obj,
       self->priv->enable_smoothing = g_value_get_boolean (value);
       break;
 
+    case PROP_TORSO_MINIMUM_NUMBER_NODES:
+      self->priv->torso_minimum_number_nodes = g_value_get_float (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
       break;
@@ -542,6 +570,10 @@ skeltrack_skeleton_get_property (GObject    *obj,
 
     case PROP_ENABLE_SMOOTHING:
       g_value_set_boolean (value, self->priv->enable_smoothing);
+      break;
+
+    case PROP_TORSO_MINIMUM_NUMBER_NODES:
+      g_value_set_float (value, self->priv->torso_minimum_number_nodes);
       break;
 
     default:
@@ -754,7 +786,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
 
   main_component_label = get_main_component (nodes,
                                              priv->focus_node,
-                                             NORMALIZED_MIN_NR_NODES_TORSO);
+                                             priv->torso_minimum_number_nodes);
 
   current_label = g_list_first (labels);
   while (current_label != NULL)
