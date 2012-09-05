@@ -370,7 +370,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                              "component to be considered "
                                              "torso",
                                              0,
-                                             1000,
+                                             G_MAXUINT16,
                                              TORSO_MINIMUM_NUMBER_NODES_DEFAULT,
                                              G_PARAM_READWRITE |
                                              G_PARAM_STATIC_STRINGS));
