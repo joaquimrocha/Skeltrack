@@ -80,6 +80,16 @@ SkeltrackJointList    skeltrack_skeleton_track_joints_sync      (SkeltrackSkelet
                                                                  GCancellable        *cancellable,
                                                                  GError             **error);
 
+void                  skeltrack_skeleton_get_focus_point        (SkeltrackSkeleton   *self,
+                                                                 gint                *x,
+                                                                 gint                *y,
+                                                                 gint                *z);
+
+void                  skeltrack_skeleton_set_focus_point        (SkeltrackSkeleton   *self,
+                                                                 gint                 x,
+                                                                 gint                 y,
+                                                                 gint                 z);
+
 G_END_DECLS
 
 #endif /* __SKELTRACK_SKELETON_H__ */

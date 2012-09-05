@@ -1548,16 +1548,16 @@ skeltrack_skeleton_new (void)
 }
 
 /**
-  * skeltrack_skeleton_set_focus_point:
-  * @self: The #SkeltrackSkeleton
-  * @x: The x coordinate of the focus point.
-  * @y: The y coordinate of the focus point.
-  * @z: The z coordinate of the focus point.
-  *
-  * Gets the focus point which is the origin from where the tracking will
-  * start. The coordinates will be in mm.
-  *
-  **/
+ * skeltrack_skeleton_set_focus_point:
+ * @self: The #SkeltrackSkeleton
+ * @x: The x coordinate of the focus point.
+ * @y: The y coordinate of the focus point.
+ * @z: The z coordinate of the focus point.
+ *
+ * Gets the focus point which is the origin from where the tracking will
+ * start. The coordinates will be in mm.
+ *
+ **/
 void
 skeltrack_skeleton_get_focus_point (SkeltrackSkeleton   *self,
                                     gint                *x,
@@ -1570,19 +1570,20 @@ skeltrack_skeleton_get_focus_point (SkeltrackSkeleton   *self,
 }
 
 /**
-  * skeltrack_skeleton_set_focus_point:
-  * @self: The #SkeltrackSkeleton
-  * @x: The x coordinate of the focus point.
-  * @y: The y coordinate of the focus point.
-  * @z: The z coordinate of the focus point.
-  *
-  * Sets the focus point which is the origin from where the tracking will
-  * start. The coordinates should be in mm.
-  *
-  * If this method is not called the default values are @x = 0, @y = 0,
-  * @z = 1000, that is, in the center of the screen and at 1m from the
-  * camera.
-  **/
+ * skeltrack_skeleton_set_focus_point:
+ * @self: The #SkeltrackSkeleton
+ * @x: The x coordinate of the focus point.
+ * @y: The y coordinate of the focus point.
+ * @z: The z coordinate of the focus point.
+ *
+ * Sets the focus point which is the origin from where the tracking will
+ * start. The coordinates should be in mm.
+ *
+ * If this method is not called the default values are @x = 0, @y = 0,
+ * @z = 1000, that is, in the center of the screen and at 1m from the
+ * camera.
+ *
+ **/
 void
 skeltrack_skeleton_set_focus_point (SkeltrackSkeleton   *self,
                                     gint                 x,
@@ -1617,6 +1618,7 @@ skeltrack_skeleton_set_focus_point (SkeltrackSkeleton   *self,
  *
  * If this method is called while a previous attempt of tracking the joints
  * is still running, a %G_IO_ERROR_PENDING error occurs.
+ *
  **/
 void
 skeltrack_skeleton_track_joints (SkeltrackSkeleton   *self,
