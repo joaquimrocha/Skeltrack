@@ -90,7 +90,8 @@ get_closest_node_with_distances (GList *node_list,
                                  Node *from,
                                  guint x_dist,
                                  guint y_dist,
-                                 guint z_dist)
+                                 guint z_dist,
+                                 gint *closest_node_dist)
 {
   Node *closest = NULL;
   gint distance = -1;
@@ -123,6 +124,7 @@ get_closest_node_with_distances (GList *node_list,
         }
     }
 
+  *closest_node_dist = distance;
   return closest;
 }
 
@@ -393,6 +395,7 @@ join_components_to_main (GList *labels,
        current_label != NULL;
        current_label = g_list_next (current_label))
     {
+      gint closer_distance = -1;
       Label *label;
       GList *current_node, *nodes;
 
@@ -412,25 +415,27 @@ join_components_to_main (GList *labels,
            current_node = g_list_next (current_node))
         {
           Node *node;
+          gint current_distance;
           node = (Node *) current_node->data;
           /* Skip nodes that belong to the same component or
              that a not in the edge of their component */
           if (g_list_length (node->neighbors) == 8)
             continue;
 
-          if (node->label->bridge_node == NULL)
+          Node *closest_node =
+            get_closest_node_with_distances (main_component_label->nodes,
+                                             node,
+                                             horizontal_max_distance,
+                                             horizontal_max_distance,
+                                             depth_max_distance,
+                                             &current_distance);
+          if (closest_node &&
+              (current_distance < closer_distance ||
+               closer_distance == -1))
             {
-              Node *closest_node =
-                get_closest_node_with_distances (main_component_label->nodes,
-                                                 node,
-                                                 horizontal_max_distance,
-                                                 horizontal_max_distance,
-                                                 depth_max_distance);
-              if (closest_node)
-                {
-                  node->label->bridge_node = node;
-                  node->label->to_node = closest_node;
-                }
+              node->label->bridge_node = node;
+              node->label->to_node = closest_node;
+              closer_distance = current_distance;
             }
         }
     }
