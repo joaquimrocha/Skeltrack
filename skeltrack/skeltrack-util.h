@@ -111,3 +111,12 @@ void          convert_screen_coords_to_mm      (guint width,
                                                 gint  z,
                                                 gint *x,
                                                 gint *y);
+
+void          convert_mm_to_screen_coords      (guint  width,
+                                                guint  height,
+                                                guint  dimension_reduction,
+                                                gint   x,
+                                                gint   y,
+                                                gint   z,
+                                                guint *i,
+                                                guint *j);

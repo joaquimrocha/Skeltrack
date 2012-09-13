@@ -566,3 +566,33 @@ convert_screen_coords_to_mm (guint width,
   *y = round((j * dimension_reduction - height * dimension_reduction / 2.0) *
              (z + MIN_DISTANCE) * SCALE_FACTOR);
 }
+
+void
+convert_mm_to_screen_coords (guint  width,
+                             guint  height,
+                             guint  dimension_reduction,
+                             gint   x,
+                             gint   y,
+                             gint   z,
+                             guint *i,
+                             guint *j)
+{
+  *i = round (
+        ((gfloat) SCALE_FACTOR *dimension_reduction * MIN_DISTANCE *  width *
+         width + dimension_reduction * SCALE_FACTOR * width * width * z +
+         2.0 * height * x)
+
+        /
+
+        (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * width +
+         2.0 * dimension_reduction * SCALE_FACTOR * width * z));
+
+  *j = round (
+        ((gfloat) dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * height +
+         dimension_reduction * SCALE_FACTOR * height * z + 2.0 * y)
+
+        /
+
+        (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR +
+         2.0 * dimension_reduction * SCALE_FACTOR * z));
+}
