@@ -70,10 +70,11 @@
 #define DIMENSION_REDUCTION 16
 #define GRAPH_DISTANCE_THRESHOLD 150
 #define GRAPH_MINIMUM_NUMBER_OF_NODES 5
-#define HANDS_MINIMUM_DISTANCE 600
-#define SHOULDERS_MINIMUM_DISTANCE 200
-#define SHOULDERS_MAXIMUM_DISTANCE 500
-#define SHOULDERS_OFFSET 350
+#define HANDS_MINIMUM_DISTANCE 525
+#define HEAD_CIRCUMFERENCE_RADIUS 290
+#define SHOULDERS_MINIMUM_ARC 120
+#define SHOULDERS_MAXIMUM_ARC 370
+#define HEAD_CIRCUMFERENCE_STEP 0.04
 #define JOINTS_PERSISTENCY_DEFAULT 3
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
@@ -102,9 +103,11 @@ struct _SkeltrackSkeletonPrivate
   guint16 min_nr_nodes;
 
   guint16 hands_minimum_distance;
-  guint16 shoulders_minimum_distance;
-  guint16 shoulders_maximum_distance;
-  guint16 shoulders_offset;
+
+  guint16 head_circumference_radius;
+  guint16 shoulders_minimum_arc;
+  guint16 shoulders_maximum_arc;
+  gfloat head_circumference_step;
 
   guint16 extrema_sphere_radius;
 
@@ -129,9 +132,10 @@ enum
     PROP_GRAPH_DISTANCE_THRESHOLD,
     PROP_GRAPH_MIN_NR_NODES,
     PROP_HANDS_MINIMUM_DISTANCE,
-    PROP_SHOULDERS_MINIMUM_DISTANCE,
-    PROP_SHOULDERS_MAXIMUM_DISTANCE,
-    PROP_SHOULDERS_OFFSET,
+    PROP_HEAD_CIRCUMFERENCE_RADIUS,
+    PROP_SHOULDERS_MINIMUM_ARC,
+    PROP_SHOULDERS_MAXIMUM_ARC,
+    PROP_HEAD_CIRCUMFERENCE_STEP,
     PROP_EXTREMA_SPHERE_RADIUS,
     PROP_SMOOTHING_FACTOR,
     PROP_JOINTS_PERSISTENCY,
@@ -248,59 +252,84 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-minimum-distance
+   * SkeltrackSkeleton:head-circumference-radius
    *
-   * The minimum distance (in mm) between each of the shoulders and the head.
+   * The radius of the circumference (in mm) from where Skeltrack will try to find the
+   * shoulders.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_SHOULDERS_MINIMUM_DISTANCE,
-                         g_param_spec_uint ("shoulders-minimum-distance",
-                                            "Shoulders' minimum distance",
-                                            "The minimum distance (in mm) "
-                                            "between each of the shoulders and "
-                                            "the head.",
-                                            100,
+                         PROP_HEAD_CIRCUMFERENCE_RADIUS,
+                         g_param_spec_uint ("head-circumference-radius",
+                                            "Head circumference radius",
+                                            "The radius of the circumference "
+                                            "(in mm) from where Skeltrack"
+                                            "will try to find the shoulders.",
+                                            1,
                                             G_MAXUINT16,
-                                            SHOULDERS_MINIMUM_DISTANCE,
+                                            HEAD_CIRCUMFERENCE_RADIUS,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-maximum-distance
+   * SkeltrackSkeleton:shoulders-minimum-arc
    *
-   * The maximum distance (in mm) between each of the shoulders and the head.
+   * The minimum arc (in mm) starting from the bottom of the head circumference for a
+   * point to be considered as a shoulder.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_SHOULDERS_MAXIMUM_DISTANCE,
-                         g_param_spec_uint ("shoulders-maximum-distance",
-                                            "Shoulders' maximum distance",
-                                            "The maximum distance (in mm) "
-                                            "between each of the shoulders "
-                                            "and the head",
-                                            150,
+                         PROP_SHOULDERS_MINIMUM_ARC,
+                         g_param_spec_uint ("shoulders-minimum-arc",
+                                            "Shoulders' minimum arc",
+                                            "The minimum arc (in mm) starting "
+                                            "from the bottom of the head "
+                                            "circumference for a point to be "
+                                            "considered as a shoulder.",
+                                            1,
                                             G_MAXUINT16,
-                                            SHOULDERS_MAXIMUM_DISTANCE,
+                                            SHOULDERS_MINIMUM_ARC,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-offset
+   * SkeltrackSkeleton:shoulders-maximum-arc
    *
-   * The shoulders are searched below the head using this offset (in mm)
-   * vertically and half of this offset horizontally. Changing it will
-   * affect where the shoulders will be found.
+   * The maximum arc (in mm) starting from the bottom of the head circumference for a
+   * point to be considered as a shoulder.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_SHOULDERS_OFFSET,
-                         g_param_spec_uint ("shoulders-offset",
-                                            "Shoulders' offset",
-                                            "The shoulders' offest from the "
-                                            "head.",
-                                            150,
+                         PROP_SHOULDERS_MAXIMUM_ARC,
+                         g_param_spec_uint ("shoulders-maximum-arc",
+                                            "Shoulders' maximum arc",
+                                            "The maximum arc (in mm) starting "
+                                            "from the bottom of the head "
+                                            "circumference for a point to be "
+                                            "considered as a shoulder.",
+                                            1,
                                             G_MAXUINT16,
-                                            SHOULDERS_OFFSET,
+                                            SHOULDERS_MAXIMUM_ARC,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
+
+
+  /**
+   * SkeltrackSkeleton:head-circumference-step
+   *
+   * The step considered for sampling the circunference around the head when
+   * searching for shoulders.
+   **/
+  g_object_class_install_property (obj_class,
+                         PROP_HEAD_CIRCUMFERENCE_STEP,
+                         g_param_spec_float ("head-circumference-step",
+                                             "Head circumference step",
+                                             "The step considered for sampling "
+                                             "the circunference around the "
+                                             "head when searching for "
+                                             "shoulders ",
+                                             .01,
+                                             M_PI,
+                                             .01,
+                                             G_PARAM_READWRITE |
+                                             G_PARAM_STATIC_STRINGS));
 
   /**
    * SkeltrackSkeleton:smoothing-factor
@@ -429,9 +458,11 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->min_nr_nodes = GRAPH_MINIMUM_NUMBER_OF_NODES;
 
   priv->hands_minimum_distance = HANDS_MINIMUM_DISTANCE;
-  priv->shoulders_minimum_distance = SHOULDERS_MINIMUM_DISTANCE;
-  priv->shoulders_maximum_distance = SHOULDERS_MAXIMUM_DISTANCE;
-  priv->shoulders_offset = SHOULDERS_OFFSET;
+
+  priv->head_circumference_radius = HEAD_CIRCUMFERENCE_RADIUS;
+  priv->shoulders_minimum_arc = SHOULDERS_MINIMUM_ARC;
+  priv->shoulders_maximum_arc = SHOULDERS_MAXIMUM_ARC;
+  priv->head_circumference_step = HEAD_CIRCUMFERENCE_STEP;
 
   priv->extrema_sphere_radius = EXTREMA_SPHERE_RADIUS;
 
@@ -512,16 +543,20 @@ skeltrack_skeleton_set_property (GObject      *obj,
       self->priv->hands_minimum_distance = g_value_get_uint (value);
       break;
 
-    case PROP_SHOULDERS_MINIMUM_DISTANCE:
-      self->priv->shoulders_minimum_distance = g_value_get_uint (value);
+    case PROP_HEAD_CIRCUMFERENCE_RADIUS:
+      self->priv->head_circumference_radius = g_value_get_uint (value);
       break;
 
-    case PROP_SHOULDERS_MAXIMUM_DISTANCE:
-      self->priv->shoulders_maximum_distance = g_value_get_uint (value);
+    case PROP_SHOULDERS_MINIMUM_ARC:
+      self->priv->shoulders_minimum_arc = g_value_get_uint (value);
       break;
 
-    case PROP_SHOULDERS_OFFSET:
-      self->priv->shoulders_offset = g_value_get_uint (value);
+    case PROP_SHOULDERS_MAXIMUM_ARC:
+      self->priv->shoulders_maximum_arc = g_value_get_uint (value);
+      break;
+
+    case PROP_HEAD_CIRCUMFERENCE_STEP:
+      self->priv->head_circumference_radius = g_value_get_float (value);
       break;
 
     case PROP_EXTREMA_SPHERE_RADIUS:
@@ -579,16 +614,20 @@ skeltrack_skeleton_get_property (GObject    *obj,
       g_value_set_uint (value, self->priv->hands_minimum_distance);
       break;
 
-    case PROP_SHOULDERS_MINIMUM_DISTANCE:
-      g_value_set_uint (value, self->priv->shoulders_minimum_distance);
+    case PROP_HEAD_CIRCUMFERENCE_RADIUS:
+      g_value_set_uint (value, self->priv->head_circumference_radius);
       break;
 
-    case PROP_SHOULDERS_MAXIMUM_DISTANCE:
-      g_value_set_uint (value, self->priv->shoulders_maximum_distance);
+    case PROP_SHOULDERS_MINIMUM_ARC:
+      g_value_set_uint (value, self->priv->shoulders_minimum_arc);
       break;
 
-    case PROP_SHOULDERS_OFFSET:
-      g_value_set_uint (value, self->priv->shoulders_offset);
+    case PROP_SHOULDERS_MAXIMUM_ARC:
+      g_value_set_uint (value, self->priv->shoulders_maximum_arc);
+      break;
+
+    case PROP_HEAD_CIRCUMFERENCE_STEP:
+      g_value_set_float (value, self->priv->head_circumference_step);
       break;
 
     case PROP_EXTREMA_SPHERE_RADIUS:
@@ -1109,74 +1148,140 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
 }
 
 static gboolean
-check_if_node_can_be_head (GList *nodes,
+check_if_node_can_be_head (SkeltrackSkeleton *self,
                            Node *node,
-                           guint16 shoulders_minimum_distance,
-                           guint16 shoulders_maximum_distance,
-                           guint16 shoulders_offset,
                            Node *centroid,
                            Node **left_shoulder,
                            Node **right_shoulder)
 {
-  Node *shoulder_point,
-    *right_shoulder_closest_point,
-    *left_shoulder_closest_point;
-  gint right_shoulder_dist, left_shoulder_dist, shoulders_distance;
+  guint16 radius, min_arc, max_arc;
+  gfloat step;
+
+  gfloat start_angle, alpha, last_node_arc, current_arc, angle, current_x, current_y;
+  gint x_node, y_node, x_centroid, y_centroid, z_centroid;
+  guint current_i, current_j;
+
+  Node *current_node = NULL;
+  Node *last_node = NULL;
+  Node *found_right_shoulder = NULL, *found_left_shoulder = NULL;
+
+  SkeltrackSkeletonPrivate *priv;
+
+  *left_shoulder = NULL;
+  *right_shoulder = NULL;
+
+  priv = self->priv;
+
+  radius = priv->head_circumference_radius;
+  min_arc = priv->shoulders_minimum_arc;
+  max_arc = priv->shoulders_maximum_arc;
+  step = self->priv->head_circumference_step;
+
+  x_node = node->x;
+  y_node = node->y;
+  x_centroid = centroid->x;
+  y_centroid = centroid->y;
+  z_centroid = centroid->z;
+
   if (node->j > centroid->j)
     return FALSE;
 
-  shoulder_point = g_slice_new0 (Node);
-  shoulder_point->x = node->x - shoulders_offset / 2;
-  shoulder_point->y = node->y + shoulders_offset;
-  shoulder_point->z = node->z;
+  if ((y_node - y_centroid) != 0)
+    alpha = atan( ABS (x_node - x_centroid) / ABS (y_node - y_centroid));
+  else
+    return FALSE;
 
-  right_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
-  if (right_shoulder_closest_point->i > centroid->i)
+  /* too much tilt, cannot be the head */
+  if (alpha >= M_PI_4)
+    return FALSE;
+
+  if (x_node < x_centroid)
+    alpha = -alpha;
+
+  start_angle = M_PI_2;
+
+  angle = start_angle + alpha;
+  current_x = x_node + radius * cos (angle);
+  current_y = y_node + radius * sin (angle);
+  current_arc = 0;
+  last_node_arc = 0;
+  current_node = NULL;
+  last_node = NULL;
+
+  // Right shoulder
+  while (current_arc <= max_arc)
     {
-      g_slice_free (Node, shoulder_point);
+      convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
+          priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
+
+      if (current_i >= priv->buffer_width || current_j >= priv->buffer_height)
+        break;
+
+      current_node = priv->node_matrix[current_j * priv->buffer_width +
+        current_i];
+
+      if (current_node != NULL)
+        {
+          last_node = current_node;
+          last_node_arc = current_arc;
+        }
+
+      angle += step;
+      current_x = x_node + radius * cos (angle);
+      current_y = y_node + radius * sin (angle);
+      current_arc = ABS (angle - start_angle) * radius;
+    }
+
+  if (last_node_arc < min_arc)
       return FALSE;
+
+  found_right_shoulder = last_node;
+
+  angle = start_angle + alpha;
+  current_x = x_node + radius * cos (angle);
+  current_y = y_node + radius * sin (angle);
+  current_arc = 0;
+  last_node_arc = 0;
+  current_node = NULL;
+  last_node = NULL;
+
+  // Left shoulder
+  while (current_arc <= max_arc)
+    {
+      convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
+          priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
+
+      if (current_i >= priv->buffer_width || current_j >= priv->buffer_height)
+        break;
+
+      current_node = priv->node_matrix[current_j * priv->buffer_width +
+        current_i];
+
+      if (current_node != NULL)
+        {
+          last_node = current_node;
+          last_node_arc = current_arc;
+        }
+
+      angle -= step;
+      current_x = x_node + radius * cos (angle);
+      current_y = y_node + radius * sin (angle);
+      current_arc = ABS (start_angle - angle) * radius;
     }
 
-  shoulder_point->x = node->x + shoulders_offset / 2;
-
-  left_shoulder_closest_point = get_closest_node (nodes, shoulder_point);
-  if (left_shoulder_closest_point->i < centroid->i)
-    {
-      g_slice_free (Node, shoulder_point);
+  if (last_node_arc < min_arc)
       return FALSE;
-    }
 
-  right_shoulder_dist = get_distance (node, right_shoulder_closest_point);
-  left_shoulder_dist = get_distance (node, left_shoulder_closest_point);
-  shoulders_distance = get_distance (left_shoulder_closest_point,
-                                     right_shoulder_closest_point);
+  found_left_shoulder = last_node;
 
-  if (right_shoulder_closest_point->i < node->i &&
-      right_shoulder_dist > shoulders_minimum_distance &&
-      right_shoulder_dist < shoulders_maximum_distance &&
-      left_shoulder_closest_point->i > node->i &&
-      left_shoulder_dist > shoulders_minimum_distance &&
-      left_shoulder_dist < shoulders_maximum_distance &&
-      ABS (right_shoulder_closest_point->y -
-           left_shoulder_closest_point->y) < shoulders_maximum_distance &&
-      shoulders_distance <= shoulders_maximum_distance)
-    {
-      *right_shoulder = right_shoulder_closest_point;
-      *left_shoulder = left_shoulder_closest_point;
+  *right_shoulder = found_right_shoulder;
+  *left_shoulder = found_left_shoulder;
 
-      g_slice_free (Node, shoulder_point);
-      return TRUE;
-    }
-
-  g_slice_free (Node, shoulder_point);
-  return FALSE;
+  return TRUE;
 }
 
 static gboolean
-get_head_and_shoulders (GList   *nodes,
-                        guint16 shoulders_minimum_distance,
-                        guint16 shoulders_maximum_distance,
-                        guint16 shoulders_offset,
+get_head_and_shoulders (SkeltrackSkeleton *self,
                         GList  *extremas,
                         Node   *centroid,
                         Node  **head,
@@ -1192,11 +1297,8 @@ get_head_and_shoulders (GList   *nodes,
     {
       node = (Node *) current_extrema->data;
 
-      if (check_if_node_can_be_head (nodes,
+      if (check_if_node_can_be_head (self,
                                      node,
-                                     shoulders_minimum_distance,
-                                     shoulders_maximum_distance,
-                                     shoulders_offset,
                                      centroid,
                                      left_shoulder,
                                      right_shoulder))
@@ -1523,11 +1625,8 @@ track_joints (SkeltrackSkeleton *self)
           if (head != NULL &&
               distance < GRAPH_DISTANCE_THRESHOLD)
             {
-              can_be_head = check_if_node_can_be_head (self->priv->graph,
+              can_be_head = check_if_node_can_be_head (self,
                                                        head,
-                                                       self->priv->shoulders_minimum_distance,
-                                                       self->priv->shoulders_maximum_distance,
-                                                       self->priv->shoulders_offset,
                                                        centroid,
                                                        &left_shoulder,
                                                        &right_shoulder);
@@ -1539,10 +1638,7 @@ track_joints (SkeltrackSkeleton *self)
 
       if (head == NULL)
         {
-          get_head_and_shoulders (self->priv->graph,
-                                  self->priv->shoulders_minimum_distance,
-                                  self->priv->shoulders_maximum_distance,
-                                  self->priv->shoulders_offset,
+          get_head_and_shoulders (self,
                                   extremas,
                                   centroid,
                                   &head,
