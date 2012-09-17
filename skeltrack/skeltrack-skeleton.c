@@ -79,6 +79,7 @@
 #define ENABLE_SMOOTHING_DEFAULT TRUE
 #define DEFAULT_FOCUS_POINT_Z 1000
 #define TORSO_MINIMUM_NUMBER_NODES_DEFAULT 16.0
+#define EXTREMA_SPHERE_RADIUS 280
 
 /* private data */
 struct _SkeltrackSkeletonPrivate
@@ -105,6 +106,8 @@ struct _SkeltrackSkeletonPrivate
   guint16 shoulders_maximum_distance;
   guint16 shoulders_offset;
 
+  guint16 extrema_sphere_radius;
+
   Node *focus_node;
 
   gboolean enable_smoothing;
@@ -129,6 +132,7 @@ enum
     PROP_SHOULDERS_MINIMUM_DISTANCE,
     PROP_SHOULDERS_MAXIMUM_DISTANCE,
     PROP_SHOULDERS_OFFSET,
+    PROP_EXTREMA_SPHERE_RADIUS,
     PROP_SMOOTHING_FACTOR,
     PROP_JOINTS_PERSISTENCY,
     PROP_ENABLE_SMOOTHING,
@@ -375,6 +379,27 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                              G_PARAM_READWRITE |
                                              G_PARAM_STATIC_STRINGS));
 
+  /**
+   * SkeltrackSkeleton:extrema-sphere-radius
+   *
+   * The radius of the sphere around the extremas (in mm).
+   *
+   * Points inside this sphere are considered for calculating the average position
+   * of the extrema. If the value is 0, no averaging is done.
+   **/
+  g_object_class_install_property (obj_class,
+                         PROP_EXTREMA_SPHERE_RADIUS,
+                         g_param_spec_uint ("extrema-sphere-radius",
+                                            "Extrema sphere radius",
+                                            "The radius of the sphere around "
+                                            "the extremas (in mm).",
+                                            0,
+                                            G_MAXUINT16,
+                                            EXTREMA_SPHERE_RADIUS,
+                                            G_PARAM_READWRITE |
+                                            G_PARAM_STATIC_STRINGS));
+
+
   /* add private structure */
   g_type_class_add_private (obj_class, sizeof (SkeltrackSkeletonPrivate));
 }
@@ -407,6 +432,8 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
   priv->shoulders_minimum_distance = SHOULDERS_MINIMUM_DISTANCE;
   priv->shoulders_maximum_distance = SHOULDERS_MAXIMUM_DISTANCE;
   priv->shoulders_offset = SHOULDERS_OFFSET;
+
+  priv->extrema_sphere_radius = EXTREMA_SPHERE_RADIUS;
 
   priv->focus_node = g_slice_new0 (Node);
   priv->focus_node->x = 0;
@@ -497,6 +524,10 @@ skeltrack_skeleton_set_property (GObject      *obj,
       self->priv->shoulders_offset = g_value_get_uint (value);
       break;
 
+    case PROP_EXTREMA_SPHERE_RADIUS:
+      self->priv->extrema_sphere_radius = g_value_get_uint (value);
+      break;
+
     case PROP_SMOOTHING_FACTOR:
       self->priv->smooth_data.smoothing_factor = g_value_get_float (value);
       break;
@@ -559,6 +590,9 @@ skeltrack_skeleton_get_property (GObject    *obj,
     case PROP_SHOULDERS_OFFSET:
       g_value_set_uint (value, self->priv->shoulders_offset);
       break;
+
+    case PROP_EXTREMA_SPHERE_RADIUS:
+      g_value_set_uint (value, self->priv->extrema_sphere_radius);
 
     case PROP_SMOOTHING_FACTOR:
       g_value_set_float (value, self->priv->smooth_data.smoothing_factor);
@@ -965,6 +999,7 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
   gint i, nr_nodes, matrix_size;
   Node *lowest, *source, *node;
   GList *extremas = NULL;
+  GList *current_extrema;
 
   priv = self->priv;
   lowest = get_lowest (self, centroid);
@@ -994,6 +1029,7 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
                    NULL);
 
       node = get_longer_distance (self, priv->distances_matrix);
+
       if (node == NULL)
         continue;
 
@@ -1007,6 +1043,68 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
         }
     }
 
+  GList *averaged_extremas = NULL;
+  if (self->priv->extrema_sphere_radius != 0)
+    {
+      for (current_extrema = g_list_first (extremas);
+           current_extrema != NULL;
+           current_extrema = g_list_next (current_extrema))
+        {
+          Node *extrema = (Node *) current_extrema->data;
+          Node *node = NULL;
+          Node *cent = NULL;
+          Node *node_centroid = NULL;
+          gint avg_x = 0;
+          gint avg_y = 0;
+          gint avg_z = 0;
+          gint length = 0;
+
+          GList *current_node;
+          for (current_node = g_list_first (priv->graph);
+               current_node != NULL;
+               current_node = g_list_next (current_node))
+            {
+               node = (Node *) current_node->data;
+
+               if ((get_distance (extrema, node) <
+                   self->priv->extrema_sphere_radius))
+                 {
+                       avg_x += node->x;
+                       avg_y += node->y;
+                       avg_z += node->z;
+
+                       length++;
+                 }
+            }
+
+          cent = g_slice_new0 (Node);
+          cent->x = avg_x / length;
+          cent->y = avg_y / length;
+          cent->z = avg_z / length;
+          cent->linked_nodes = NULL;
+
+          node_centroid = get_closest_node (priv->graph, cent);
+
+          /* If the new averaged extrema is not already an extrema
+             set it for addition */
+          if (g_list_find (averaged_extremas, node_centroid) == NULL)
+            extrema = node_centroid;
+
+          /* If the non-averaged extrema is picked and
+             it is the same as a previous averaged extrema
+             set it to NULL */
+          if (g_list_find (averaged_extremas, extrema) != NULL)
+            extrema = NULL;
+
+          g_slice_free (Node, cent);
+
+          averaged_extremas = g_list_append (averaged_extremas, extrema);
+        }
+
+      g_list_free (extremas);
+
+      extremas = averaged_extremas;
+    }
   return extremas;
 }
 
