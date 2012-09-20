@@ -388,7 +388,8 @@ void
 join_components_to_main (GList *labels,
                          Label *main_component_label,
                          guint horizontal_max_distance,
-                         guint depth_max_distance)
+                         guint depth_max_distance,
+                         guint graph_distance_threshold)
 {
   GList *current_label;
 
@@ -405,10 +406,9 @@ join_components_to_main (GList *labels,
         continue;
 
       /* Skip nodes behind main component */
-      if (label->higher_z > main_component_label->higher_z)
-        {
+      if (label->higher_z > main_component_label->higher_z +
+          graph_distance_threshold)
           continue;
-        }
 
       nodes = label->nodes;
       for (current_node = g_list_first (nodes);

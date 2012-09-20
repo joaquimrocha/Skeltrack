@@ -891,7 +891,8 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       join_components_to_main (labels,
                                main_component_label,
                                priv->distance_threshold,
-                               priv->hands_minimum_distance);
+                               priv->hands_minimum_distance,
+                               priv->distance_threshold);
 
       current_label = g_list_first (labels);
       while (current_label != NULL)

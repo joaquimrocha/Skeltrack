@@ -86,7 +86,8 @@ Label *       new_label                        (gint index);
 void          join_components_to_main          (GList *nodes,
                                                 Label *lowest_component_label,
                                                 guint horizontal_max_distance,
-                                                guint depth_max_distance);
+                                                guint depth_max_distance,
+                                                guint graph_distance_threshold);
 
 void          set_joint_from_node              (SkeltrackJointList *joints,
                                                 Node *node,
