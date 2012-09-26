@@ -55,6 +55,10 @@ Node *        get_closest_node_to_joint        (GList *extremas,
 
 Node *        get_closest_node                 (GList *node_list, Node *from);
 
+Node *        get_closest_torso_node           (GList *node_list,
+                                                Node  *from,
+                                                Node  *head);
+
 Label *       get_main_component               (GList   *node_list,
                                                 Node    *from,
                                                 gdouble  min_normalized_nr_nodes);

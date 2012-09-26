@@ -168,6 +168,43 @@ get_distance (Node *a, Node *b)
 }
 
 Node *
+get_closest_torso_node (GList *node_list, Node *from, Node *head)
+{
+  Node *closest = NULL;
+  gint distance = -1;
+  GList *current_node;
+
+  /* @TODO: Replace this and use closest pair of points
+     algorithm and ensure O(n log n) instead of brute-force */
+
+  for (current_node = g_list_first (node_list);
+       current_node != NULL;
+       current_node = g_list_next (current_node))
+    {
+      Node *node;
+      gint current_distance;
+      node = (Node *) current_node->data;
+      if (closest == NULL &&
+          node->z >= head->z &&
+          node->y >= from->y)
+        {
+          closest = node;
+          distance = get_distance (node, from);
+          continue;
+        }
+      current_distance = get_distance (node, from);
+      if (current_distance < distance &&
+          node->z >= head->z &&
+          node->y >= from->y)
+        {
+          closest = node;
+          distance = current_distance;
+        }
+    }
+  return closest;
+}
+
+Node *
 get_closest_node (GList *node_list, Node *from)
 {
   Node *closest = NULL;

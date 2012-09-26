@@ -1614,10 +1614,63 @@ track_joints (SkeltrackSkeleton *self)
                            head,
                            SKELTRACK_JOINT_ID_HEAD,
                            self->priv->dimension_reduction);
+
+      if (left_shoulder && head && head->z > left_shoulder->z)
+        {
+          Node *virtual_left_shoulder = g_slice_new (Node);
+
+          virtual_left_shoulder->x = left_shoulder->x;
+          virtual_left_shoulder->y = left_shoulder->y;
+          virtual_left_shoulder->z = centroid->z;
+
+          convert_mm_to_screen_coords (self->priv->buffer_width,
+                                       self->priv->buffer_height,
+                                       self->priv->dimension_reduction,
+                                       virtual_left_shoulder->x,
+                                       virtual_left_shoulder->y,
+                                       virtual_left_shoulder->z,
+                                       (guint *) &virtual_left_shoulder->i,
+                                       (guint *) &virtual_left_shoulder->j);
+
+          Node *neighbor = get_closest_torso_node (self->priv->graph,
+                                                   virtual_left_shoulder,
+                                                   head);
+          if (neighbor)
+              left_shoulder = neighbor;
+
+          g_slice_free (Node, virtual_left_shoulder);
+        }
+
       set_joint_from_node (&joints,
                            left_shoulder,
                            SKELTRACK_JOINT_ID_LEFT_SHOULDER,
                            self->priv->dimension_reduction);
+
+      if (right_shoulder && head && head->z > right_shoulder->z)
+        {
+          Node *virtual_right_shoulder = g_slice_new (Node);
+
+          virtual_right_shoulder->x = right_shoulder->x;
+          virtual_right_shoulder->y = right_shoulder->y;
+          virtual_right_shoulder->z = centroid->z;
+
+          convert_mm_to_screen_coords (self->priv->buffer_width,
+                                       self->priv->buffer_height,
+                                       self->priv->dimension_reduction,
+                                       virtual_right_shoulder->x,
+                                       virtual_right_shoulder->y,
+                                       virtual_right_shoulder->z,
+                                       (guint *) &virtual_right_shoulder->i,
+                                       (guint *) &virtual_right_shoulder->j);
+
+          Node *neighbor = get_closest_torso_node (self->priv->graph,
+                                                   virtual_right_shoulder,
+                                                   centroid);
+          if (neighbor)
+              right_shoulder = neighbor;
+
+          g_slice_free (Node, virtual_right_shoulder);
+        }
       set_joint_from_node (&joints,
                            right_shoulder,
                            SKELTRACK_JOINT_ID_RIGHT_SHOULDER,
