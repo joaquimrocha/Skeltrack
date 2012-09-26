@@ -577,15 +577,33 @@ convert_mm_to_screen_coords (guint  width,
                              guint *i,
                              guint *j)
 {
-  *i = round (
-        ((gfloat) SCALE_FACTOR *dimension_reduction * MIN_DISTANCE *  width *
-         width + dimension_reduction * SCALE_FACTOR * width * width * z +
-         2.0 * height * x)
+  gboolean is_vertical =
+    height > width? TRUE : FALSE;
 
-        /
+  if (is_vertical)
+    {
+      *i = round (
+            ((gfloat) SCALE_FACTOR * dimension_reduction * MIN_DISTANCE *  height *
+             width + dimension_reduction * SCALE_FACTOR * height * width * z +
+             2.0 * width * x)
 
-        (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * width +
-         2.0 * dimension_reduction * SCALE_FACTOR * width * z));
+            /
+
+            (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * height +
+             2.0 * dimension_reduction * SCALE_FACTOR * height * z));
+    }
+  else
+    {
+      *i = round (
+            ((gfloat) SCALE_FACTOR * dimension_reduction * MIN_DISTANCE *  width *
+             width + dimension_reduction * SCALE_FACTOR * width * width * z +
+             2.0 * height * x)
+
+            /
+
+            (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * width +
+             2.0 * dimension_reduction * SCALE_FACTOR * width * z));
+    }
 
   *j = round (
         ((gfloat) dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * height +
