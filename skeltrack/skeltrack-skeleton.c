@@ -1479,19 +1479,19 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
       previous_right[index_right] = previous_right_b;
     }
 
+  elbow_extrema = NULL;
+  hand_extrema = NULL;
+  identify_arm_extrema (distances_left[0],
+                        previous_left[0],
+                        width,
+                        self->priv->hands_minimum_distance,
+                        left_extrema[0],
+                        &elbow_extrema,
+                        &hand_extrema);
+
   /* Two left extremas */
   if (index_left == 1)
     {
-      elbow_extrema = NULL;
-      hand_extrema = NULL;
-      identify_arm_extrema (distances_left[0],
-                            previous_left[0],
-                            width,
-                            self->priv->hands_minimum_distance,
-                            left_extrema[0],
-                            &elbow_extrema,
-                            &hand_extrema);
-
       if (hand_extrema == NULL)
         {
           hand_extrema = left_extrema[1];
@@ -1502,51 +1502,31 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
           hand_extrema = left_extrema[0];
           elbow_extrema = left_extrema[1];
         }
-
-      set_joint_from_node (joints,
-                           elbow_extrema,
-                           SKELTRACK_JOINT_ID_LEFT_ELBOW,
-                           self->priv->dimension_reduction);
-      set_joint_from_node (joints,
-                           hand_extrema,
-                           SKELTRACK_JOINT_ID_LEFT_HAND,
-                           self->priv->dimension_reduction);
     }
-  else if (index_left == 0)
-    {
-      elbow_extrema = NULL;
-      hand_extrema = NULL;
-      identify_arm_extrema (distances_left[0],
-                            previous_left[0],
-                            width,
-                            self->priv->hands_minimum_distance,
-                            left_extrema[0],
-                            &elbow_extrema,
-                            &hand_extrema);
 
-      set_joint_from_node (joints,
-                           elbow_extrema,
-                           SKELTRACK_JOINT_ID_LEFT_ELBOW,
-                           self->priv->dimension_reduction);
-      set_joint_from_node (joints,
-                           hand_extrema,
-                           SKELTRACK_JOINT_ID_LEFT_HAND,
-                           self->priv->dimension_reduction);
-    }
+  set_joint_from_node (joints,
+                       elbow_extrema,
+                       SKELTRACK_JOINT_ID_LEFT_ELBOW,
+                       self->priv->dimension_reduction);
+  set_joint_from_node (joints,
+                       hand_extrema,
+                       SKELTRACK_JOINT_ID_LEFT_HAND,
+                       self->priv->dimension_reduction);
+
+
+  elbow_extrema = NULL;
+  hand_extrema = NULL;
+  identify_arm_extrema (distances_right[0],
+                        previous_right[0],
+                        width,
+                        self->priv->hands_minimum_distance,
+                        right_extrema[0],
+                        &elbow_extrema,
+                        &hand_extrema);
 
   /* Two right extremas */
   if (index_right == 1)
     {
-      elbow_extrema = NULL;
-      hand_extrema = NULL;
-      identify_arm_extrema (distances_right[0],
-                            previous_right[0],
-                            width,
-                            self->priv->hands_minimum_distance,
-                            right_extrema[0],
-                            &elbow_extrema,
-                            &hand_extrema);
-
       if (hand_extrema == NULL)
         {
           hand_extrema = right_extrema[1];
@@ -1557,36 +1537,16 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
           hand_extrema = right_extrema[0];
           elbow_extrema = right_extrema[1];
         }
+    }
 
-      set_joint_from_node (joints,
-                           elbow_extrema,
-                           SKELTRACK_JOINT_ID_RIGHT_ELBOW,
-                           self->priv->dimension_reduction);
-      set_joint_from_node (joints,
-                           hand_extrema,
-                           SKELTRACK_JOINT_ID_RIGHT_HAND,
-                           self->priv->dimension_reduction);
-    }
-  else if (index_right == 0)
-    {
-      elbow_extrema = NULL;
-      hand_extrema = NULL;
-      identify_arm_extrema (distances_right[0],
-                            previous_right[0],
-                            width,
-                            self->priv->hands_minimum_distance,
-                            right_extrema[0],
-                            &elbow_extrema,
-                            &hand_extrema);
-      set_joint_from_node (joints,
-                           elbow_extrema,
-                           SKELTRACK_JOINT_ID_RIGHT_ELBOW,
-                           self->priv->dimension_reduction);
-      set_joint_from_node (joints,
-                           hand_extrema,
-                           SKELTRACK_JOINT_ID_RIGHT_HAND,
-                           self->priv->dimension_reduction);
-    }
+  set_joint_from_node (joints,
+                       elbow_extrema,
+                       SKELTRACK_JOINT_ID_RIGHT_ELBOW,
+                       self->priv->dimension_reduction);
+  set_joint_from_node (joints,
+                       hand_extrema,
+                       SKELTRACK_JOINT_ID_RIGHT_HAND,
+                       self->priv->dimension_reduction);
 
   g_slice_free1 (matrix_size * sizeof (Node *), previous_left_a);
   g_slice_free1 (matrix_size * sizeof (Node *), previous_left_b);
