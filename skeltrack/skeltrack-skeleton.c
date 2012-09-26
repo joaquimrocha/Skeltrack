@@ -886,7 +886,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       current_label = g_list_next (current_label);
     }
 
-  if (labels)
+  if (main_component_label)
     {
       join_components_to_main (labels,
                                main_component_label,

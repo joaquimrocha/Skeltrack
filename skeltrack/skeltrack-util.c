@@ -217,7 +217,8 @@ get_main_component (GList *node_list, Node *from, gdouble min_normalized_nr_node
     node = (Node *) current_node->data;
     label = node->label;
 
-    if (main_component == NULL)
+    if (main_component == NULL &&
+        label->normalized_num_nodes > min_normalized_nr_nodes)
       {
         main_component = label;
         distance = get_distance (node, from);
