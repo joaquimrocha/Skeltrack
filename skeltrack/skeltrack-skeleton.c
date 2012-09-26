@@ -1684,12 +1684,15 @@ track_joints (SkeltrackSkeleton *self)
       joints = smoothed;
     }
 
-  skeltrack_joint_free (self->priv->previous_head);
   if (joints)
     {
       SkeltrackJoint *joint = skeltrack_joint_list_get_joint (joints,
                                                    SKELTRACK_JOINT_ID_HEAD);
-      self->priv->previous_head = skeltrack_joint_copy (joint);
+      if (joint != NULL)
+        {
+          skeltrack_joint_free (self->priv->previous_head);
+          self->priv->previous_head = skeltrack_joint_copy (joint);
+        }
     }
 
   g_list_free (extremas);
