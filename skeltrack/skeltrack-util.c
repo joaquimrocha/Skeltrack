@@ -558,9 +558,11 @@ convert_screen_coords_to_mm (guint width,
                              gint *x,
                              gint *y)
 {
+  gfloat width_height_relation =
+    width > height ? (gfloat) width / height : (gfloat) height / width;
   /* Formula from http://openkinect.org/wiki/Imaging_Information */
   *x = round((i * dimension_reduction - width * dimension_reduction / 2.0) *
-             (z + MIN_DISTANCE) * SCALE_FACTOR * ((gfloat) width / height));
+             (z + MIN_DISTANCE) * SCALE_FACTOR * width_height_relation);
   *y = round((j * dimension_reduction - height * dimension_reduction / 2.0) *
              (z + MIN_DISTANCE) * SCALE_FACTOR);
 }
