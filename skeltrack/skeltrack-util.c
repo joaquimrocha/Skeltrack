@@ -615,40 +615,11 @@ convert_mm_to_screen_coords (guint  width,
                              guint *i,
                              guint *j)
 {
-  gboolean is_vertical =
-    height > width? TRUE : FALSE;
+  gfloat width_height_relation =
+    width > height ? (gfloat) width / height : (gfloat) height / width;
 
-  if (is_vertical)
-    {
-      *i = round (
-            ((gfloat) SCALE_FACTOR * dimension_reduction * MIN_DISTANCE *  height *
-             width + dimension_reduction * SCALE_FACTOR * height * width * z +
-             2.0 * width * x)
-
-            /
-
-            (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * height +
-             2.0 * dimension_reduction * SCALE_FACTOR * height * z));
-    }
-  else
-    {
-      *i = round (
-            ((gfloat) SCALE_FACTOR * dimension_reduction * MIN_DISTANCE *  width *
-             width + dimension_reduction * SCALE_FACTOR * width * width * z +
-             2.0 * height * x)
-
-            /
-
-            (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * width +
-             2.0 * dimension_reduction * SCALE_FACTOR * width * z));
-    }
-
-  *j = round (
-        ((gfloat) dimension_reduction * MIN_DISTANCE * SCALE_FACTOR * height +
-         dimension_reduction * SCALE_FACTOR * height * z + 2.0 * y)
-
-        /
-
-        (2.0 * dimension_reduction * MIN_DISTANCE * SCALE_FACTOR +
-         2.0 * dimension_reduction * SCALE_FACTOR * z));
+  *i = round (width / 2.0 + x / ((gfloat) (z + MIN_DISTANCE) * SCALE_FACTOR *
+                                 dimension_reduction * width_height_relation));
+  *j = round (height / 2.0 + y / ((gfloat) (z + MIN_DISTANCE) * SCALE_FACTOR *
+                                  dimension_reduction));
 }
