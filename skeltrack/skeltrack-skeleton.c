@@ -1559,6 +1559,38 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_b);
 }
 
+static Node *
+get_adjusted_shoulder (guint buffer_width,
+                       guint buffer_height,
+                       guint dimension_reduction,
+                       GList *graph,
+                       Node *centroid,
+                       Node *head,
+                       Node *shoulder)
+{
+  Node *virtual_shoulder, *adjusted_shoulder = NULL;
+  virtual_shoulder = g_slice_new (Node);
+  virtual_shoulder->x = shoulder->x;
+  virtual_shoulder->y = shoulder->y;
+  virtual_shoulder->z = centroid->z;
+
+  convert_mm_to_screen_coords (buffer_width,
+                               buffer_height,
+                               dimension_reduction,
+                               virtual_shoulder->x,
+                               virtual_shoulder->y,
+                               virtual_shoulder->z,
+                               (guint *) &virtual_shoulder->i,
+                               (guint *) &virtual_shoulder->j);
+
+  adjusted_shoulder = get_closest_torso_node (graph,
+                                              virtual_shoulder,
+                                              head);
+  g_slice_free (Node, virtual_shoulder);
+
+  return adjusted_shoulder;
+}
+
 static SkeltrackJoint **
 track_joints (SkeltrackSkeleton *self)
 {
@@ -1617,28 +1649,17 @@ track_joints (SkeltrackSkeleton *self)
 
       if (left_shoulder && head && head->z > left_shoulder->z)
         {
-          Node *virtual_left_shoulder = g_slice_new (Node);
+          Node *adjusted_shoulder;
+          adjusted_shoulder = get_adjusted_shoulder (self->priv->buffer_width,
+                                                self->priv->buffer_height,
+                                                self->priv->dimension_reduction,
+                                                self->priv->graph,
+                                                centroid,
+                                                head,
+                                                left_shoulder);
 
-          virtual_left_shoulder->x = left_shoulder->x;
-          virtual_left_shoulder->y = left_shoulder->y;
-          virtual_left_shoulder->z = centroid->z;
-
-          convert_mm_to_screen_coords (self->priv->buffer_width,
-                                       self->priv->buffer_height,
-                                       self->priv->dimension_reduction,
-                                       virtual_left_shoulder->x,
-                                       virtual_left_shoulder->y,
-                                       virtual_left_shoulder->z,
-                                       (guint *) &virtual_left_shoulder->i,
-                                       (guint *) &virtual_left_shoulder->j);
-
-          Node *neighbor = get_closest_torso_node (self->priv->graph,
-                                                   virtual_left_shoulder,
-                                                   head);
-          if (neighbor)
-              left_shoulder = neighbor;
-
-          g_slice_free (Node, virtual_left_shoulder);
+          if (adjusted_shoulder)
+            left_shoulder = adjusted_shoulder;
         }
 
       set_joint_from_node (&joints,
@@ -1648,28 +1669,17 @@ track_joints (SkeltrackSkeleton *self)
 
       if (right_shoulder && head && head->z > right_shoulder->z)
         {
-          Node *virtual_right_shoulder = g_slice_new (Node);
+          Node *adjusted_shoulder;
+          adjusted_shoulder = get_adjusted_shoulder (self->priv->buffer_width,
+                                                self->priv->buffer_height,
+                                                self->priv->dimension_reduction,
+                                                self->priv->graph,
+                                                centroid,
+                                                head,
+                                                right_shoulder);
 
-          virtual_right_shoulder->x = right_shoulder->x;
-          virtual_right_shoulder->y = right_shoulder->y;
-          virtual_right_shoulder->z = centroid->z;
-
-          convert_mm_to_screen_coords (self->priv->buffer_width,
-                                       self->priv->buffer_height,
-                                       self->priv->dimension_reduction,
-                                       virtual_right_shoulder->x,
-                                       virtual_right_shoulder->y,
-                                       virtual_right_shoulder->z,
-                                       (guint *) &virtual_right_shoulder->i,
-                                       (guint *) &virtual_right_shoulder->j);
-
-          Node *neighbor = get_closest_torso_node (self->priv->graph,
-                                                   virtual_right_shoulder,
-                                                   centroid);
-          if (neighbor)
-              right_shoulder = neighbor;
-
-          g_slice_free (Node, virtual_right_shoulder);
+          if (adjusted_shoulder)
+            right_shoulder = adjusted_shoulder;
         }
       set_joint_from_node (&joints,
                            right_shoulder,
