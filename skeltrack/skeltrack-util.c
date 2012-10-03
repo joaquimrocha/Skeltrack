@@ -184,21 +184,15 @@ get_closest_torso_node (GList *node_list, Node *from, Node *head)
       Node *node;
       gint current_distance;
       node = (Node *) current_node->data;
-      if (closest == NULL &&
-          node->z >= head->z &&
+      if (node->z >= head->z &&
           node->y >= from->y)
         {
-          closest = node;
-          distance = get_distance (node, from);
-          continue;
-        }
-      current_distance = get_distance (node, from);
-      if (current_distance < distance &&
-          node->z >= head->z &&
-          node->y >= from->y)
-        {
-          closest = node;
-          distance = current_distance;
+          current_distance = get_distance (node, from);
+          if (closest == NULL || current_distance < distance)
+            {
+              closest = node;
+              distance = current_distance;
+            }
         }
     }
   return closest;
