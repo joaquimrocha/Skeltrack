@@ -71,10 +71,10 @@
 #define GRAPH_DISTANCE_THRESHOLD 150
 #define GRAPH_MINIMUM_NUMBER_OF_NODES 5
 #define HANDS_MINIMUM_DISTANCE 525
-#define HEAD_CIRCUMFERENCE_RADIUS 290
-#define SHOULDERS_MINIMUM_ARC 120
-#define SHOULDERS_MAXIMUM_ARC 370
-#define HEAD_CIRCUMFERENCE_STEP 0.04
+#define SHOULDERS_CIRCUMFERENCE_RADIUS 290
+#define SHOULDERS_ARC_START_POINT 120
+#define SHOULDERS_ARC_LENGTH 250
+#define SHOULDERS_SEARCH_STEP 0.04
 #define JOINTS_PERSISTENCY_DEFAULT 3
 #define SMOOTHING_FACTOR_DEFAULT .5
 #define ENABLE_SMOOTHING_DEFAULT TRUE
@@ -104,10 +104,10 @@ struct _SkeltrackSkeletonPrivate
 
   guint16 hands_minimum_distance;
 
-  guint16 head_circumference_radius;
-  guint16 shoulders_minimum_arc;
-  guint16 shoulders_maximum_arc;
-  gfloat head_circumference_step;
+  guint16 shoulders_circumference_radius;
+  guint16 shoulders_arc_start_point;
+  guint16 shoulders_arc_length;
+  gfloat shoulders_search_step;
 
   guint16 extrema_sphere_radius;
 
@@ -132,10 +132,10 @@ enum
     PROP_GRAPH_DISTANCE_THRESHOLD,
     PROP_GRAPH_MIN_NR_NODES,
     PROP_HANDS_MINIMUM_DISTANCE,
-    PROP_HEAD_CIRCUMFERENCE_RADIUS,
-    PROP_SHOULDERS_MINIMUM_ARC,
-    PROP_SHOULDERS_MAXIMUM_ARC,
-    PROP_HEAD_CIRCUMFERENCE_STEP,
+    PROP_SHOULDERS_CIRCUMFERENCE_RADIUS,
+    PROP_SHOULDERS_ARC_START_POINT,
+    PROP_SHOULDERS_ARC_LENGTH,
+    PROP_SHOULDERS_SEARCH_STEP,
     PROP_EXTREMA_SPHERE_RADIUS,
     PROP_SMOOTHING_FACTOR,
     PROP_JOINTS_PERSISTENCY,
@@ -252,79 +252,82 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:head-circumference-radius
+   * SkeltrackSkeleton:shoulders-circumference-radius
    *
-   * The radius of the circumference (in mm) from where Skeltrack will try to find the
-   * shoulders.
+   * The radius of the circumference (in mm) from the head with which
+   * to look for the shoulders.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_HEAD_CIRCUMFERENCE_RADIUS,
-                         g_param_spec_uint ("head-circumference-radius",
-                                            "Head circumference radius",
+                         PROP_SHOULDERS_CIRCUMFERENCE_RADIUS,
+                         g_param_spec_uint ("shoulders-circumference-radius",
+                                            "Shoulders' circumference radius",
                                             "The radius of the circumference "
-                                            "(in mm) from where Skeltrack"
-                                            "will try to find the shoulders.",
+                                            "(in mm) from the head with which "
+                                            "to look for the shoulders.",
                                             1,
                                             G_MAXUINT16,
-                                            HEAD_CIRCUMFERENCE_RADIUS,
+                                            SHOULDERS_CIRCUMFERENCE_RADIUS,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-minimum-arc
+   * SkeltrackSkeleton:shoulders-arc-start-point
    *
-   * The minimum arc (in mm) starting from the bottom of the head circumference for a
-   * point to be considered as a shoulder.
+   * The starting point (in mm) of the arc (from the bottom of the
+   * shoulders' circumference) where the shoulders will be searched for.
+   * This point is used together with the
+   * SkeltrackSkeleton::shoulders-arc-length to determine the arc
+   * where the shoulders' points will be looked for.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_SHOULDERS_MINIMUM_ARC,
-                         g_param_spec_uint ("shoulders-minimum-arc",
-                                            "Shoulders' minimum arc",
-                                            "The minimum arc (in mm) starting "
-                                            "from the bottom of the head "
-                                            "circumference for a point to be "
-                                            "considered as a shoulder.",
+                         PROP_SHOULDERS_ARC_START_POINT,
+                         g_param_spec_uint ("shoulders-arc-start-point",
+                                            "Shoulders' arc start point",
+                                            "The starting point (in mm) of the "
+                                            "arc from the bottom of the "
+                                            "shoulders' circumference where "
+                                            "the shoulders will be searched for.",
                                             1,
                                             G_MAXUINT16,
-                                            SHOULDERS_MINIMUM_ARC,
+                                            SHOULDERS_ARC_START_POINT,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-maximum-arc
+   * SkeltrackSkeleton:shoulders-arc-length
    *
-   * The maximum arc (in mm) starting from the bottom of the head circumference for a
-   * point to be considered as a shoulder.
+   * The length (in mm) of the arc where the shoulders will be searched.
+   * This length is used together with the
+   * SkeltrackSkeleton::shoulders-arc-start-point to determine the arc
+   * where the shoulders' points will be looked for.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_SHOULDERS_MAXIMUM_ARC,
-                         g_param_spec_uint ("shoulders-maximum-arc",
-                                            "Shoulders' maximum arc",
-                                            "The maximum arc (in mm) starting "
-                                            "from the bottom of the head "
-                                            "circumference for a point to be "
-                                            "considered as a shoulder.",
+                         PROP_SHOULDERS_ARC_LENGTH,
+                         g_param_spec_uint ("shoulders-arc-length",
+                                            "Shoulders' arc length",
+                                            "The length (in mm) of the arc "
+                                            "where the shoulders will be "
+                                            "searched.",
                                             1,
                                             G_MAXUINT16,
-                                            SHOULDERS_MAXIMUM_ARC,
+                                            SHOULDERS_ARC_LENGTH,
                                             G_PARAM_READWRITE |
                                             G_PARAM_STATIC_STRINGS));
 
 
   /**
-   * SkeltrackSkeleton:head-circumference-step
+   * SkeltrackSkeleton:shoulders-search-step
    *
-   * The step considered for sampling the circunference around the head when
-   * searching for shoulders.
+   * The step considered for sampling the shoulders' circunference
+   * when searching for the shoulders.
    **/
   g_object_class_install_property (obj_class,
-                         PROP_HEAD_CIRCUMFERENCE_STEP,
-                         g_param_spec_float ("head-circumference-step",
-                                             "Head circumference step",
+                         PROP_SHOULDERS_SEARCH_STEP,
+                         g_param_spec_float ("shoulders-search-step",
+                                             "Shoulders' search step",
                                              "The step considered for sampling "
-                                             "the circunference around the "
-                                             "head when searching for "
-                                             "shoulders ",
+                                             "the shoulders' circunference "
+                                             "when searching for the shoulders.",
                                              .01,
                                              M_PI,
                                              .01,
@@ -459,10 +462,10 @@ skeltrack_skeleton_init (SkeltrackSkeleton *self)
 
   priv->hands_minimum_distance = HANDS_MINIMUM_DISTANCE;
 
-  priv->head_circumference_radius = HEAD_CIRCUMFERENCE_RADIUS;
-  priv->shoulders_minimum_arc = SHOULDERS_MINIMUM_ARC;
-  priv->shoulders_maximum_arc = SHOULDERS_MAXIMUM_ARC;
-  priv->head_circumference_step = HEAD_CIRCUMFERENCE_STEP;
+  priv->shoulders_circumference_radius = SHOULDERS_CIRCUMFERENCE_RADIUS;
+  priv->shoulders_arc_start_point = SHOULDERS_ARC_START_POINT;
+  priv->shoulders_arc_length = SHOULDERS_ARC_LENGTH;
+  priv->shoulders_search_step = SHOULDERS_SEARCH_STEP;
 
   priv->extrema_sphere_radius = EXTREMA_SPHERE_RADIUS;
 
@@ -543,20 +546,20 @@ skeltrack_skeleton_set_property (GObject      *obj,
       self->priv->hands_minimum_distance = g_value_get_uint (value);
       break;
 
-    case PROP_HEAD_CIRCUMFERENCE_RADIUS:
-      self->priv->head_circumference_radius = g_value_get_uint (value);
+    case PROP_SHOULDERS_CIRCUMFERENCE_RADIUS:
+      self->priv->shoulders_circumference_radius = g_value_get_uint (value);
       break;
 
-    case PROP_SHOULDERS_MINIMUM_ARC:
-      self->priv->shoulders_minimum_arc = g_value_get_uint (value);
+    case PROP_SHOULDERS_ARC_START_POINT:
+      self->priv->shoulders_arc_start_point = g_value_get_uint (value);
       break;
 
-    case PROP_SHOULDERS_MAXIMUM_ARC:
-      self->priv->shoulders_maximum_arc = g_value_get_uint (value);
+    case PROP_SHOULDERS_ARC_LENGTH:
+      self->priv->shoulders_arc_length = g_value_get_uint (value);
       break;
 
-    case PROP_HEAD_CIRCUMFERENCE_STEP:
-      self->priv->head_circumference_radius = g_value_get_float (value);
+    case PROP_SHOULDERS_SEARCH_STEP:
+      self->priv->shoulders_circumference_radius = g_value_get_float (value);
       break;
 
     case PROP_EXTREMA_SPHERE_RADIUS:
@@ -614,20 +617,20 @@ skeltrack_skeleton_get_property (GObject    *obj,
       g_value_set_uint (value, self->priv->hands_minimum_distance);
       break;
 
-    case PROP_HEAD_CIRCUMFERENCE_RADIUS:
-      g_value_set_uint (value, self->priv->head_circumference_radius);
+    case PROP_SHOULDERS_CIRCUMFERENCE_RADIUS:
+      g_value_set_uint (value, self->priv->shoulders_circumference_radius);
       break;
 
-    case PROP_SHOULDERS_MINIMUM_ARC:
-      g_value_set_uint (value, self->priv->shoulders_minimum_arc);
+    case PROP_SHOULDERS_ARC_START_POINT:
+      g_value_set_uint (value, self->priv->shoulders_arc_start_point);
       break;
 
-    case PROP_SHOULDERS_MAXIMUM_ARC:
-      g_value_set_uint (value, self->priv->shoulders_maximum_arc);
+    case PROP_SHOULDERS_ARC_LENGTH:
+      g_value_set_uint (value, self->priv->shoulders_arc_length);
       break;
 
-    case PROP_HEAD_CIRCUMFERENCE_STEP:
-      g_value_set_float (value, self->priv->head_circumference_step);
+    case PROP_SHOULDERS_SEARCH_STEP:
+      g_value_set_float (value, self->priv->shoulders_search_step);
       break;
 
     case PROP_EXTREMA_SPHERE_RADIUS:
@@ -1152,7 +1155,7 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
                            Node **left_shoulder,
                            Node **right_shoulder)
 {
-  guint16 radius, min_arc, max_arc;
+  guint16 radius, arc_start_point, arc_length;
   gfloat step;
 
   gfloat start_angle, alpha, last_node_arc, current_arc, angle, current_x, current_y;
@@ -1170,10 +1173,10 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
 
   priv = self->priv;
 
-  radius = priv->head_circumference_radius;
-  min_arc = priv->shoulders_minimum_arc;
-  max_arc = priv->shoulders_maximum_arc;
-  step = self->priv->head_circumference_step;
+  radius = priv->shoulders_circumference_radius;
+  arc_start_point = priv->shoulders_arc_start_point;
+  arc_length = priv->shoulders_arc_length;
+  step = self->priv->shoulders_search_step;
 
   x_node = node->x;
   y_node = node->y;
@@ -1207,7 +1210,7 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
   last_node = NULL;
 
   // Right shoulder
-  while (current_arc <= max_arc)
+  while (current_arc <= arc_start_point + arc_length)
     {
       convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
           priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
@@ -1230,7 +1233,7 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
       current_arc = ABS (angle - start_angle) * radius;
     }
 
-  if (last_node_arc < min_arc)
+  if (last_node_arc < arc_start_point)
       return FALSE;
 
   found_right_shoulder = last_node;
@@ -1244,7 +1247,7 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
   last_node = NULL;
 
   // Left shoulder
-  while (current_arc <= max_arc)
+  while (current_arc <= arc_start_point + arc_length)
     {
       convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
           priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
@@ -1267,7 +1270,7 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
       current_arc = ABS (start_angle - angle) * radius;
     }
 
-  if (last_node_arc < min_arc)
+  if (last_node_arc < arc_start_point)
       return FALSE;
 
   found_left_shoulder = last_node;
