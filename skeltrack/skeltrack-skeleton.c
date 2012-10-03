@@ -1127,14 +1127,11 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
 
           /* If the new averaged extrema is not already an extrema
              set it for addition */
-          if (g_list_find (averaged_extremas, node_centroid) == NULL)
-            extrema = node_centroid;
-
-          /* If the non-averaged extrema is picked and
-             it is the same as a previous averaged extrema
-             set it to NULL */
-          if (g_list_find (averaged_extremas, extrema) != NULL)
-            extrema = NULL;
+          if (g_list_find (averaged_extremas, node_centroid) == NULL &&
+              g_list_find (extremas, node_centroid) == NULL)
+            {
+              extrema = node_centroid;
+            }
 
           g_slice_free (Node, cent);
 
