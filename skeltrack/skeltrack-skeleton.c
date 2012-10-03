@@ -51,9 +51,10 @@
  * #SkeltrackSkeleton:graph-distance-threshold ,
  * #SkeltrackSkeleton:graph-minimum-number-nodes ,
  * #SkeltrackSkeleton:hands-minimum-distance ,
- * #SkeltrackSkeleton:shoulders-minimum-distance,
- * #SkeltrackSkeleton:shoulders-maximum-distance and
- * #SkeltrackSkeleton:shoulders-offset .
+ * #SkeltrackSkeleton:shoulders-arc-start-point ,
+ * #SkeltrackSkeleton:shoulders-arc-length ,
+ * #SkeltrackSkeleton:shoulders-circumference-radius ,
+ * #SkeltrackSkeleton:shoulders-search-step .
  **/
 #include <string.h>
 #include <math.h>
