@@ -612,6 +612,13 @@ convert_mm_to_screen_coords (guint  width,
   gfloat width_height_relation =
     width > height ? (gfloat) width / height : (gfloat) height / width;
 
+  if (z + MIN_DISTANCE == 0)
+    {
+      *i = 0;
+      *j = 0;
+      return;
+    }
+
   *i = round (width / 2.0 + x / ((gfloat) (z + MIN_DISTANCE) * SCALE_FACTOR *
                                  dimension_reduction * width_height_relation));
   *j = round (height / 2.0 + y / ((gfloat) (z + MIN_DISTANCE) * SCALE_FACTOR *
