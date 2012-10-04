@@ -636,6 +636,7 @@ skeltrack_skeleton_get_property (GObject    *obj,
 
     case PROP_EXTREMA_SPHERE_RADIUS:
       g_value_set_uint (value, self->priv->extrema_sphere_radius);
+      break;
 
     case PROP_SMOOTHING_FACTOR:
       g_value_set_float (value, self->priv->smooth_data.smoothing_factor);
