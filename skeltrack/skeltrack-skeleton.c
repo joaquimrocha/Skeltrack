@@ -1036,8 +1036,8 @@ get_longer_distance (SkeltrackSkeleton *self, gint *distances)
   return farthest_node;
 }
 
-static GList *
-get_averaged_extremas (SkeltrackSkeletonPrivate *priv, GList *extremas)
+static void
+set_average_extremas (SkeltrackSkeletonPrivate *priv, GList *extremas)
 {
   GList *current_extrema, *averaged_extremas = NULL;
 
@@ -1068,7 +1068,9 @@ get_averaged_extremas (SkeltrackSkeletonPrivate *priv, GList *extremas)
             }
         }
 
-      if (length > 0)
+      /* if the length is 1 then it is because no other
+         nodes were considered for the average */
+      if (length > 1)
         {
           cent = g_slice_new0 (Node);
           cent->x = avg_x / length;
@@ -1083,16 +1085,12 @@ get_averaged_extremas (SkeltrackSkeletonPrivate *priv, GList *extremas)
           if (g_list_find (averaged_extremas, node_centroid) == NULL &&
               g_list_find (extremas, node_centroid) == NULL)
             {
-              extrema = node_centroid;
+              current_extrema->data = node_centroid;
             }
 
           g_slice_free (Node, cent);
         }
-
-      averaged_extremas = g_list_append (averaged_extremas, extrema);
     }
-
-  return averaged_extremas;
 }
 
 static GList *
@@ -1147,11 +1145,7 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
 
   if (self->priv->extrema_sphere_radius != 0)
     {
-      GList *averaged_extremas;
-      averaged_extremas = get_averaged_extremas (priv, extremas);
-
-      g_list_free (extremas);
-      extremas = averaged_extremas;
+      set_average_extremas (priv, extremas);
     }
 
   return extremas;
