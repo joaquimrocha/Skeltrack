@@ -1037,13 +1037,71 @@ get_longer_distance (SkeltrackSkeleton *self, gint *distances)
 }
 
 static GList *
+get_averaged_extremas (SkeltrackSkeletonPrivate *priv, GList *extremas)
+{
+  GList *current_extrema, *averaged_extremas = NULL;
+
+  for (current_extrema = g_list_first (extremas);
+       current_extrema != NULL;
+       current_extrema = g_list_next (current_extrema))
+    {
+      GList *current_node;
+      Node *extrema, *node = NULL, *cent = NULL, *node_centroid = NULL;
+      gint avg_x = 0, avg_y = 0, avg_z = 0, length = 0;
+
+      extrema = (Node *) current_extrema->data;
+
+      for (current_node = g_list_first (priv->graph);
+           current_node != NULL;
+           current_node = g_list_next (current_node))
+        {
+          node = (Node *) current_node->data;
+
+          if ((get_distance (extrema, node) <
+               priv->extrema_sphere_radius))
+            {
+              avg_x += node->x;
+              avg_y += node->y;
+              avg_z += node->z;
+
+              length++;
+            }
+        }
+
+      if (length > 0)
+        {
+          cent = g_slice_new0 (Node);
+          cent->x = avg_x / length;
+          cent->y = avg_y / length;
+          cent->z = avg_z / length;
+          cent->linked_nodes = NULL;
+
+          node_centroid = get_closest_node (priv->graph, cent);
+
+          /* If the new averaged extrema is not already an extrema
+             set it for addition */
+          if (g_list_find (averaged_extremas, node_centroid) == NULL &&
+              g_list_find (extremas, node_centroid) == NULL)
+            {
+              extrema = node_centroid;
+            }
+
+          g_slice_free (Node, cent);
+        }
+
+      averaged_extremas = g_list_append (averaged_extremas, extrema);
+    }
+
+  return averaged_extremas;
+}
+
+static GList *
 get_extremas (SkeltrackSkeleton *self, Node *centroid)
 {
   SkeltrackSkeletonPrivate *priv;
   gint i, nr_nodes, matrix_size;
   Node *lowest, *source, *node;
   GList *extremas = NULL;
-  GList *current_extrema;
 
   priv = self->priv;
   lowest = get_lowest (self, centroid);
@@ -1087,65 +1145,15 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
         }
     }
 
-  GList *averaged_extremas = NULL;
   if (self->priv->extrema_sphere_radius != 0)
     {
-      for (current_extrema = g_list_first (extremas);
-           current_extrema != NULL;
-           current_extrema = g_list_next (current_extrema))
-        {
-          Node *extrema = (Node *) current_extrema->data;
-          Node *node = NULL;
-          Node *cent = NULL;
-          Node *node_centroid = NULL;
-          gint avg_x = 0;
-          gint avg_y = 0;
-          gint avg_z = 0;
-          gint length = 0;
-
-          GList *current_node;
-          for (current_node = g_list_first (priv->graph);
-               current_node != NULL;
-               current_node = g_list_next (current_node))
-            {
-               node = (Node *) current_node->data;
-
-               if ((get_distance (extrema, node) <
-                   self->priv->extrema_sphere_radius))
-                 {
-                       avg_x += node->x;
-                       avg_y += node->y;
-                       avg_z += node->z;
-
-                       length++;
-                 }
-            }
-
-          cent = g_slice_new0 (Node);
-          cent->x = avg_x / length;
-          cent->y = avg_y / length;
-          cent->z = avg_z / length;
-          cent->linked_nodes = NULL;
-
-          node_centroid = get_closest_node (priv->graph, cent);
-
-          /* If the new averaged extrema is not already an extrema
-             set it for addition */
-          if (g_list_find (averaged_extremas, node_centroid) == NULL &&
-              g_list_find (extremas, node_centroid) == NULL)
-            {
-              extrema = node_centroid;
-            }
-
-          g_slice_free (Node, cent);
-
-          averaged_extremas = g_list_append (averaged_extremas, extrema);
-        }
+      GList *averaged_extremas;
+      averaged_extremas = get_averaged_extremas (priv, extremas);
 
       g_list_free (extremas);
-
       extremas = averaged_extremas;
     }
+
   return extremas;
 }
 
