@@ -1149,56 +1149,22 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
   return extremas;
 }
 
-static gboolean
-check_if_node_can_be_head (SkeltrackSkeleton *self,
-                           Node *node,
-                           Node *centroid,
-                           Node **left_shoulder,
-                           Node **right_shoulder)
+static Node *
+get_shoulder_node (SkeltrackSkeletonPrivate *priv,
+                   gfloat alpha,
+                   gfloat step,
+                   gint x_node,
+                   gint y_node,
+                   gint z_centroid)
 {
-  guint16 radius, arc_start_point, arc_length;
-  gfloat step;
-
-  gfloat start_angle, alpha, last_node_arc, current_arc, angle, current_x, current_y;
-  gint x_node, y_node, x_centroid, y_centroid, z_centroid;
-  guint current_i, current_j;
-
+  guint radius, arc_start_point, arc_length, current_i, current_j;
+  gfloat start_angle, last_node_arc, current_arc, angle, current_x, current_y;
   Node *current_node = NULL;
   Node *last_node = NULL;
-  Node *found_right_shoulder = NULL, *found_left_shoulder = NULL;
-
-  SkeltrackSkeletonPrivate *priv;
-
-  *left_shoulder = NULL;
-  *right_shoulder = NULL;
-
-  priv = self->priv;
 
   radius = priv->shoulders_circumference_radius;
   arc_start_point = priv->shoulders_arc_start_point;
   arc_length = priv->shoulders_arc_length;
-  step = self->priv->shoulders_search_step;
-
-  x_node = node->x;
-  y_node = node->y;
-  x_centroid = centroid->x;
-  y_centroid = centroid->y;
-  z_centroid = centroid->z;
-
-  if (node->j > centroid->j)
-    return FALSE;
-
-  if ((y_node - y_centroid) != 0)
-    alpha = atan( ABS (x_node - x_centroid) / ABS (y_node - y_centroid));
-  else
-    return FALSE;
-
-  /* too much tilt, cannot be the head */
-  if (alpha >= M_PI_4)
-    return FALSE;
-
-  if (x_node < x_centroid)
-    alpha = -alpha;
 
   start_angle = M_PI_2;
 
@@ -1210,17 +1176,22 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
   current_node = NULL;
   last_node = NULL;
 
-  // Right shoulder
-  while (current_arc <= arc_start_point + arc_length)
+  while (current_arc <= (arc_start_point + arc_length))
     {
-      convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
-          priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
+      convert_mm_to_screen_coords (priv->buffer_width,
+                                   priv->buffer_height,
+                                   priv->dimension_reduction,
+                                   current_x,
+                                   current_y,
+                                   z_centroid,
+                                   &current_i,
+                                   &current_j);
 
       if (current_i >= priv->buffer_width || current_j >= priv->buffer_height)
         break;
 
       current_node = priv->node_matrix[current_j * priv->buffer_width +
-        current_i];
+                                       current_i];
 
       if (current_node != NULL)
         {
@@ -1235,46 +1206,61 @@ check_if_node_can_be_head (SkeltrackSkeleton *self,
     }
 
   if (last_node_arc < arc_start_point)
-      return FALSE;
+    return NULL;
 
-  found_right_shoulder = last_node;
+  return last_node;
+}
 
-  angle = start_angle + alpha;
-  current_x = x_node + radius * cos (angle);
-  current_y = y_node + radius * sin (angle);
-  current_arc = 0;
-  last_node_arc = 0;
-  current_node = NULL;
-  last_node = NULL;
+static gboolean
+check_if_node_can_be_head (SkeltrackSkeleton *self,
+                           Node *node,
+                           Node *centroid,
+                           Node **left_shoulder,
+                           Node **right_shoulder)
+{
+  gfloat alpha;
+  Node *found_right_shoulder = NULL, *found_left_shoulder = NULL;
 
-  // Left shoulder
-  while (current_arc <= arc_start_point + arc_length)
-    {
-      convert_mm_to_screen_coords (priv->buffer_width, priv->buffer_height,
-          priv->dimension_reduction, current_x, current_y, z_centroid, &current_i, &current_j);
+  SkeltrackSkeletonPrivate *priv;
 
-      if (current_i >= priv->buffer_width || current_j >= priv->buffer_height)
-        break;
+  *left_shoulder = NULL;
+  *right_shoulder = NULL;
 
-      current_node = priv->node_matrix[current_j * priv->buffer_width +
-        current_i];
+  priv = self->priv;
 
-      if (current_node != NULL)
-        {
-          last_node = current_node;
-          last_node_arc = current_arc;
-        }
+  if (node->j > centroid->j)
+    return FALSE;
 
-      angle -= step;
-      current_x = x_node + radius * cos (angle);
-      current_y = y_node + radius * sin (angle);
-      current_arc = ABS (start_angle - angle) * radius;
-    }
+  if ((node->y - centroid->y) != 0)
+    alpha = atan( ABS (node->x - centroid->x) / ABS (node->y - centroid->y));
+  else
+    return FALSE;
 
-  if (last_node_arc < arc_start_point)
-      return FALSE;
+  /* too much tilt, cannot be the head */
+  if (alpha >= M_PI_4)
+    return FALSE;
 
-  found_left_shoulder = last_node;
+  if (node->x < centroid->x)
+    alpha = -alpha;
+
+  found_right_shoulder = get_shoulder_node (priv,
+                                            alpha,
+                                            priv->shoulders_search_step,
+                                            node->x,
+                                            node->y,
+                                            centroid->z);
+  if (found_right_shoulder == NULL)
+    return FALSE;
+
+  found_left_shoulder = get_shoulder_node (priv,
+                                           alpha,
+                                           -priv->shoulders_search_step,
+                                           node->x,
+                                           node->y,
+                                           centroid->z);
+
+  if (found_left_shoulder == NULL)
+    return FALSE;
 
   *right_shoulder = found_right_shoulder;
   *left_shoulder = found_left_shoulder;
