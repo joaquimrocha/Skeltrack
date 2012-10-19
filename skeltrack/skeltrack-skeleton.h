@@ -59,7 +59,7 @@ struct _SkeltrackSkeletonClass
 
 GType                 skeltrack_skeleton_get_type               (void) G_GNUC_CONST;
 
-GObject *             skeltrack_skeleton_new                    (void);
+SkeltrackSkeleton *   skeltrack_skeleton_new                    (void);
 
 void                  skeltrack_skeleton_track_joints           (SkeltrackSkeleton   *self,
                                                                  guint16             *buffer,

@@ -1797,7 +1797,7 @@ track_joints_in_thread (GSimpleAsyncResult *res,
  *
  * Returns: (transfer full): The newly created #SkeltrackSkeleton.
  */
-GObject *
+SkeltrackSkeleton *
 skeltrack_skeleton_new (void)
 {
   return g_object_new (SKELTRACK_TYPE_SKELETON, NULL);
