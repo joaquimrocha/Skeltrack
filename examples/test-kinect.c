@@ -534,7 +534,7 @@ on_new_kinect_device (GObject      *obj,
 
   clutter_actor_show_all (stage);
 
-  skeleton = SKELTRACK_SKELETON (skeltrack_skeleton_new ());
+  skeleton = skeltrack_skeleton_new ();
   g_object_get (skeleton, "smoothing-factor", &SMOOTHING_FACTOR, NULL);
 
   set_info_text ();
