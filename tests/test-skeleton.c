@@ -64,7 +64,7 @@ static void
 fixture_setup_main_loop (Fixture       *f,
                          gconstpointer  test_data)
 {
-  f->skeleton = SKELTRACK_SKELETON (skeltrack_skeleton_new ());
+  f->skeleton = skeltrack_skeleton_new ();
   f->main_loop = g_main_loop_new (NULL, FALSE);
 }
 
