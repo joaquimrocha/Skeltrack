@@ -682,10 +682,10 @@ join_neighbor (SkeltrackSkeleton *self,
       distance = get_distance (neighbor, node);
       if (distance < self->priv->distance_threshold)
         {
-          neighbor->neighbors = g_list_append (neighbor->neighbors,
-                                               node);
-          node->neighbors = g_list_append (node->neighbors,
-                                           neighbor);
+          neighbor->neighbors = g_list_prepend (neighbor->neighbors,
+                                                node);
+          node->neighbors = g_list_prepend (node->neighbors,
+                                            neighbor);
           neighbor_labels[index] = neighbor->label;
           index++;
         }
@@ -793,7 +793,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
               Label *label;
               next_label++;
               label = new_label (next_label);
-              labels = g_list_append (labels, label);
+              labels = g_list_prepend (labels, label);
               lowest_index_label = label;
             }
           else
@@ -808,7 +808,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
             }
 
           node->label = lowest_index_label;
-          nodes = g_list_append(nodes, node);
+          nodes = g_list_prepend(nodes, node);
           priv->node_matrix[width * node->j + node->i] = node;
         }
     }
@@ -817,7 +817,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
     {
       Node *node = (Node *) g_list_nth_data (nodes, n);
       node->label = label_find (node->label);
-      node->label->nodes = g_list_append (node->label->nodes,
+      node->label->nodes = g_list_prepend (node->label->nodes,
                                           node);
 
       /* Assign lower node so we can extract the
@@ -925,9 +925,9 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
             }
 
           label->bridge_node->neighbors =
-            g_list_append (label->bridge_node->neighbors, label->to_node);
-          label->to_node->neighbors = g_list_append (label->to_node->neighbors,
-                                                     label->bridge_node);
+            g_list_prepend (label->bridge_node->neighbors, label->to_node);
+          label->to_node->neighbors = g_list_prepend (label->to_node->neighbors,
+                                                      label->bridge_node);
 
           current_label = g_list_next (current_label);
         }
@@ -1137,10 +1137,10 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
       if (node != source)
         {
           priv->distances_matrix[node->j * priv->buffer_width + node->i] = 0;
-          source->linked_nodes = g_list_append (source->linked_nodes, node);
-          node->linked_nodes = g_list_append (node->linked_nodes, source);
+          source->linked_nodes = g_list_prepend (source->linked_nodes, node);
+          node->linked_nodes = g_list_prepend (node->linked_nodes, source);
           source = node;
-          extremas = g_list_append (extremas, node);
+          extremas = g_list_prepend (extremas, node);
         }
     }
 
