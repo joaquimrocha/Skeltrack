@@ -23,6 +23,7 @@
 #include <math.h>
 
 #include "skeltrack-util.h"
+#include "pqueue.h"
 
 /* @TODO: Expose these to the user */
 static const gfloat SCALE_FACTOR = .0021;
@@ -502,8 +503,8 @@ dijkstra_to (GList *nodes, Node *source, Node *target,
              gint width, gint height,
              gint *distances, Node **previous)
 {
-  gint nr;
-  GList *unvisited_nodes, *current;
+  PQueue *queue = pqueue_new (g_list_length (nodes));
+  GList *current;
 
   for (current = g_list_first (nodes);
        previous != NULL && current != NULL;
@@ -513,70 +514,74 @@ dijkstra_to (GList *nodes, Node *source, Node *target,
       node = (Node *) current->data;
       previous[node->j * width + node->i] = NULL;
     }
-  distances[source->j * width + source->i] = 0;
 
-  unvisited_nodes = g_list_copy (nodes);
-  nr = 0;
-  while (unvisited_nodes != NULL)
+  for (current = g_list_first (nodes);
+       current != NULL;
+       current = g_list_next (current))
     {
       Node *node;
-      GList *current_neighbor, *shorter_dist_node, *cur_node;
+      node = (Node *) current->data;
 
-      shorter_dist_node = g_list_first (unvisited_nodes);
-      cur_node = g_list_next (shorter_dist_node);
-      while (cur_node != NULL)
+      if (node == source)
         {
-          Node *value, *shorter_dist;
-          value = (Node *) cur_node->data;
-          shorter_dist = (Node *) shorter_dist_node->data;
-          if (distances[shorter_dist->j * width + shorter_dist->i] == -1 ||
-              (distances[value->j * width + value->i] != -1 &&
-               distances[value->j * width +
-                         value->i] < distances[shorter_dist->j * width +
-                                               shorter_dist->i]))
-            {
-              shorter_dist_node = cur_node;
-            }
-          cur_node = g_list_next (cur_node);
+          pqueue_insert (queue, node, 0);
+        }
+      else
+        {
+          pqueue_insert (queue, node, INT_MAX);
+        }
+    }
+
+  distances[source->j * width + source->i] = 0;
+
+  while (!pqueue_is_empty (queue))
+    {
+      Node *node;
+      GList *current_neighbor;
+
+      node = pqueue_pop_minimum (queue);
+
+      if (target != NULL && node == target)
+        {
+          pqueue_free (queue);
+          return TRUE;
         }
 
-      node = (Node *) shorter_dist_node->data;
-      if (distances[node->j * width + node->i] == -1)
-        {
-          break;
-        }
+      if (distances [node->j * width + node->i] == -1)
+          continue;
 
       current_neighbor = g_list_first (node->neighbors);
       while (current_neighbor)
         {
-          gint dist;
+          guint dist;
           Node *neighbor;
 
           neighbor = (Node *) current_neighbor->data;
-          dist = get_distance (node, neighbor) +
-            distances[node->j * width + node->i];
 
-          if (distances[neighbor->j * width + neighbor->i] == -1 ||
-              dist < distances[neighbor->j * width + neighbor->i])
+          if (pqueue_has_element (queue, neighbor))
             {
-              distances[neighbor->j * width + neighbor->i] = dist;
-              if (previous != NULL)
+              dist = get_distance (node, neighbor) +
+                distances[node->j * width + node->i];
+              pqueue_delete (queue, neighbor);
+
+              if (distances[neighbor->j * width + neighbor->i] == -1 ||
+                  (distances[neighbor->j * width + neighbor->i] != -1 &&
+                   dist < distances[neighbor->j * width + neighbor->i]))
                 {
-                  previous[neighbor->j * width + neighbor->i] = node;
+                  distances[neighbor->j * width + neighbor->i] = dist;
+                  if (previous)
+                    previous[neighbor->j * width + neighbor->i] = node;
                 }
-              nr++;
-            }
-          if (target != NULL && neighbor == target)
-            {
-              g_list_free (unvisited_nodes);
-              return TRUE;
+
+              pqueue_insert (queue, neighbor, distances[neighbor->j * width +
+                             neighbor->i]);
             }
 
           current_neighbor = g_list_next (current_neighbor);
         }
-      unvisited_nodes = g_list_delete_link (unvisited_nodes, shorter_dist_node);
+
     }
-  g_list_free (unvisited_nodes);
+  pqueue_free (queue);
   return FALSE;
 }
 
