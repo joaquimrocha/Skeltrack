@@ -503,7 +503,7 @@ dijkstra_to (GList *nodes, Node *source, Node *target,
              gint width, gint height,
              gint *distances, Node **previous)
 {
-  PQueue *queue = pqueue_new (g_list_length (nodes));
+  PQueue *queue = pqueue_new (g_list_length (nodes), width, height);
   GList *current;
 
   for (current = g_list_first (nodes);

@@ -20,6 +20,9 @@
  * for more details.
  */
 
+#ifndef __SKELTRACK_UTIL_H__
+#define __SKELTRACK_UTIL_H__
+
 #include <glib.h>
 #include "skeltrack-joint.h"
 
@@ -125,3 +128,4 @@ void          convert_mm_to_screen_coords      (guint  width,
                                                 gint   z,
                                                 guint *i,
                                                 guint *j);
+#endif /* __SKELTRACK_UTIL_H__ */

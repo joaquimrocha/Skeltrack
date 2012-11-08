@@ -25,26 +25,36 @@
 #include "pqueue.h"
 
 PQueue *
-pqueue_new (guint max_size)
+pqueue_new (guint max_size, guint width, guint height)
 {
+  guint i;
+
   PQueue *queue = g_slice_new (PQueue);
   queue->elements = g_slice_alloc0 ((max_size + 1) * sizeof (PQelement));
-  queue->map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  queue->map = g_slice_alloc (width * height * sizeof(guint));
+
+  for (i=0; i<width*height; i++)
+    queue->map[i] = -1;
+
   queue->size = 0;
   queue->max_size = max_size;
+  queue->width = width;
+  queue->height = height;
   return queue;
 }
 
 void swap (PQueue *queue, guint a, guint b)
 {
-  gpointer temp = g_hash_table_lookup (queue->map, queue->elements[a].data);
-  g_hash_table_replace (queue->map,
-                        queue->elements[a].data,
-                        g_hash_table_lookup (queue->map,
-                                             queue->elements[b].data));
-  g_hash_table_replace (queue->map,
-                        queue->elements[b].data,
-                        temp);
+  guint index_a, index_b;
+
+  index_a = queue->elements[a].data->j * queue->width +
+    queue->elements[a].data->i;
+  index_b = queue->elements[b].data->j * queue->width +
+    queue->elements[b].data->i;
+
+  guint temp = queue->map[index_a];
+  queue->map[index_a] = queue->map[index_b];
+  queue->map[index_b] = temp;
 
   PQelement element_temp = queue->elements[b];
   queue->elements[b] = queue->elements[a];
@@ -88,50 +98,53 @@ void sink (PQueue *queue, guint index)
 
 void
 pqueue_insert (PQueue *pqueue,
-               gpointer data,
+               Node *data,
                guint priority)
 {
+  guint index;
+
   pqueue->elements[++(pqueue->size)].data = data;
   pqueue->elements[pqueue->size].priority = priority;
 
-  guint *size_p = g_new(guint, 1);
-  *size_p = pqueue->size;
-  g_hash_table_insert (pqueue->map, pqueue->elements[pqueue->size].data, size_p);
+  index = data->j * pqueue->width + data->i;
+  pqueue->map[index] = pqueue->size;
+
   swim (pqueue, pqueue->size);
 }
 
-gpointer
+Node *
 pqueue_pop_minimum (PQueue *pqueue)
 {
   if (pqueue_is_empty (pqueue))
     return NULL;
 
-  gpointer minimum = pqueue->elements[1].data;
+  Node *minimum = pqueue->elements[1].data;
+  guint index;
   swap (pqueue, 1, pqueue->size);
   pqueue->size--;
 
-  guint *p = g_hash_table_lookup (pqueue->map, minimum);
-  g_free (p);
-  g_hash_table_remove (pqueue->map, minimum);
-  sink (pqueue, 1);
+  index = minimum->j * pqueue->width + minimum->i;
+  pqueue->map[index] = -1;
 
+  sink (pqueue, 1);
   return minimum;
 }
 
 void
 pqueue_delete (PQueue *pqueue,
-               gpointer data)
+               Node *data)
 {
-  guint *pos_p;
-  pos_p = (guint *) g_hash_table_lookup (pqueue->map, data);
-  guint pos = *pos_p;
-  gpointer element = pqueue->elements[pos].data;
+  guint index, pos;
+
+  index = data->j * pqueue->width + data->i;
+  pos = pqueue->map[index];
+
+  Node *element = pqueue->elements[pos].data;
+
   swap (pqueue, pos, pqueue->size);
   pqueue->size--;
 
-  guint *p = g_hash_table_lookup (pqueue->map, element);
-  g_free (p);
-  g_hash_table_remove (pqueue->map, element);
+  pqueue->map[element->j * pqueue->width + element->i] = -1;
 
   if (pos <= pqueue->size)
     sink (pqueue, pos);
@@ -139,9 +152,9 @@ pqueue_delete (PQueue *pqueue,
 
 gboolean
 pqueue_has_element (PQueue *pqueue,
-                    gpointer data)
+                    Node *data)
 {
-  return g_hash_table_contains (pqueue->map, data);
+  return pqueue->map[data->j * pqueue->width + data->i] != -1;
 }
 
 gboolean
@@ -153,15 +166,9 @@ pqueue_is_empty (PQueue *pqueue)
 void
 pqueue_free (PQueue *pqueue)
 {
-  GHashTableIter iter;
-  gpointer key, value;
-
-  g_hash_table_iter_init (&iter, pqueue->map);
-  while (g_hash_table_iter_next (&iter, &key, &value))
-    g_free (value);
-
-  g_hash_table_destroy (pqueue->map);
   g_slice_free1 ((pqueue->max_size + 1) * sizeof (PQelement), pqueue->elements);
+  g_slice_free1 (pqueue->width * pqueue->height * sizeof (guint), pqueue->map);
+
   g_slice_free (PQueue, pqueue);
 }
 
