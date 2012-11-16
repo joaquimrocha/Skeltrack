@@ -507,20 +507,16 @@ dijkstra_to (GList *nodes, Node *source, Node *target,
   GList *current;
 
   for (current = g_list_first (nodes);
-       previous != NULL && current != NULL;
-       current = g_list_next (current))
-    {
-      Node *node;
-      node = (Node *) current->data;
-      previous[node->j * width + node->i] = NULL;
-    }
-
-  for (current = g_list_first (nodes);
        current != NULL;
        current = g_list_next (current))
     {
       Node *node;
       node = (Node *) current->data;
+
+      if (previous != NULL)
+        {
+          previous[node->j * width + node->i] = NULL;
+        }
 
       if (node == source)
         {
