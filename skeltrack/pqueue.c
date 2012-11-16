@@ -150,8 +150,7 @@ pqueue_delete (PQueue *pqueue,
 
   pqueue->map[element->j * pqueue->width + element->i] = -1;
 
-  if (pos <= pqueue->size)
-    sink (pqueue, pos);
+  sink (pqueue, pos);
 }
 
 gboolean
