@@ -319,7 +319,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
   /**
    * SkeltrackSkeleton:shoulders-search-step
    *
-   * The step considered for sampling the shoulders' circunference
+   * The step considered for sampling the shoulders' circumference
    * when searching for the shoulders.
    **/
   g_object_class_install_property (obj_class,
@@ -327,7 +327,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                          g_param_spec_float ("shoulders-search-step",
                                              "Shoulders' search step",
                                              "The step considered for sampling "
-                                             "the shoulders' circunference "
+                                             "the shoulders' circumference "
                                              "when searching for the shoulders.",
                                              .01,
                                              M_PI,
