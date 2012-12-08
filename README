@@ -16,7 +16,7 @@ How to use it
 
 Although it is device agnostic, a common way of using Skeltrack is
 to use it together with a Kinect device, for which we recommend the
-GFreenct library.
+GFreenect library.
 
 Checking out the examples/test-kinect example app is a good start in
 order to learn how to use Skeltrack.
