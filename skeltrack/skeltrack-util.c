@@ -624,3 +624,17 @@ convert_mm_to_screen_coords (guint  width,
   *j = round (height / 2.0 + y / ((gfloat) (z + MIN_DISTANCE) * SCALE_FACTOR *
                                   dimension_reduction));
 }
+
+gfloat
+get_angle_between_nodes (Node *a, Node *b)
+{
+  gfloat sin_angle, opp, slope;
+  opp = (gfloat) a->x - b->x;
+  slope = sqrt (pow (a->x - b->x, 2) + pow (a->y - b->y, 2));
+
+  if (slope == 0)
+    return 0;
+
+  sin_angle = opp / slope;
+  return asin (-sin_angle);
+}

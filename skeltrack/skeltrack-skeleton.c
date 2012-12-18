@@ -1581,6 +1581,40 @@ get_adjusted_shoulder (guint buffer_width,
   return adjusted_shoulder;
 }
 
+static Node *
+get_shoulder_center (guint buffer_width,
+                     guint buffer_height,
+                     guint dimension_reduction,
+                     GList *graph,
+                     Node *left_shoulder,
+                     Node *right_shoulder,
+                     Node *head)
+{
+  Node *virtual_shoulder, *shoulder_center = NULL;
+  virtual_shoulder = g_slice_new (Node);
+  virtual_shoulder->x = round (left_shoulder->x -
+                               (left_shoulder->x - right_shoulder->x) / 2.f);
+  virtual_shoulder->y = round (left_shoulder->y -
+                               (left_shoulder->y - right_shoulder->y) / 2.f);
+  virtual_shoulder->z = round (left_shoulder->z -
+                               (left_shoulder->z - right_shoulder->z) / 2.f);
+
+  convert_mm_to_screen_coords (buffer_width,
+                               buffer_height,
+                               dimension_reduction,
+                               virtual_shoulder->x,
+                               virtual_shoulder->y,
+                               virtual_shoulder->z,
+                               (guint *) &virtual_shoulder->i,
+                               (guint *) &virtual_shoulder->j);
+  shoulder_center = get_closest_torso_node (graph,
+                                            virtual_shoulder,
+                                            head);
+  g_slice_free (Node, virtual_shoulder);
+
+  return shoulder_center;
+}
+
 static SkeltrackJoint **
 track_joints (SkeltrackSkeleton *self)
 {
@@ -1588,12 +1622,15 @@ track_joints (SkeltrackSkeleton *self)
   Node *head = NULL;
   Node *right_shoulder = NULL;
   Node *left_shoulder = NULL;
+  Node *shoulder_center = NULL;
+  /* Node *lowest = NULL; */
   GList *extremas;
   SkeltrackJointList joints = NULL;
   SkeltrackJointList smoothed = NULL;
 
   self->priv->graph = make_graph (self, &self->priv->labels);
   centroid = get_centroid (self);
+  /* lowest = get_lowest (self->priv->graph, centroid); */
   extremas = get_extremas (self, centroid);
 
   if (g_list_length (extremas) > 2)
@@ -1682,6 +1719,55 @@ track_joints (SkeltrackSkeleton *self)
                                         left_shoulder,
                                         right_shoulder,
                                         &joints);
+
+      if (left_shoulder && right_shoulder)
+        {
+          shoulder_center = get_shoulder_center (self->priv->buffer_width,
+                                                 self->priv->buffer_height,
+                                                 self->priv->dimension_reduction,
+                                                 self->priv->graph,
+                                                 left_shoulder,
+                                                 right_shoulder,
+                                                 head);
+
+          set_joint_from_node (&joints,
+                               shoulder_center,
+                               SKELTRACK_JOINT_ID_SHOULDER_CENTER,
+                               self->priv->dimension_reduction);
+        }
+
+      if (head && shoulder_center)
+        {
+          Node *center = g_slice_new (Node);
+          convert_mm_to_screen_coords (self->priv->buffer_width,
+                                       self->priv->buffer_height,
+                                       self->priv->dimension_reduction,
+                                       centroid->x,
+                                       centroid->y,
+                                       centroid->z,
+                                       (guint *) &centroid->i,
+                                       (guint *) &centroid->j);
+
+          gfloat angle = get_angle_between_nodes (shoulder_center, centroid);
+          gfloat dist = (gfloat) get_distance (shoulder_center, head);
+          center->x = shoulder_center->x + sin (angle) * 2.5 * dist;
+          center->y = shoulder_center->y + cos (angle) * 2.5 * dist;
+          center->z = shoulder_center->z;
+          convert_mm_to_screen_coords (self->priv->buffer_width,
+                                       self->priv->buffer_height,
+                                       self->priv->dimension_reduction,
+                                       center->x,
+                                       center->y,
+                                       center->z,
+                                       (guint *) &center->i,
+                                       (guint *) &center->j);
+
+          set_joint_from_node (&joints,
+                               center,
+                               SKELTRACK_JOINT_ID_CENTER,
+                               self->priv->dimension_reduction);
+        }
+
     }
 
   self->priv->buffer = NULL;

@@ -125,3 +125,5 @@ void          convert_mm_to_screen_coords      (guint  width,
                                                 gint   z,
                                                 guint *i,
                                                 guint *j);
+
+gfloat        get_angle_between_nodes          (Node *a, Node *b);
