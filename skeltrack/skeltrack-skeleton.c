@@ -560,7 +560,7 @@ skeltrack_skeleton_set_property (GObject      *obj,
       break;
 
     case PROP_SHOULDERS_SEARCH_STEP:
-      self->priv->shoulders_circumference_radius = g_value_get_float (value);
+      self->priv->shoulders_search_step = g_value_get_float (value);
       break;
 
     case PROP_EXTREMA_SPHERE_RADIUS:
