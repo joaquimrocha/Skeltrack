@@ -33,8 +33,7 @@ source_c = \
 source_h = \
 	skeltrack.h \
 	skeltrack-joint.h \
-	skeltrack-skeleton.h \
-	pqueue.h
+	skeltrack-skeleton.h
 
 source_h_priv =
 
@@ -59,7 +58,7 @@ skeltrack_HEADERS = \
 	$(source_h) \
 	$(source_h_priv)
 
-noinst_HEADERS = skeltrack-smooth.h skeltrack-util.h
+noinst_HEADERS = skeltrack-smooth.h skeltrack-util.h pqueue.h
 
 # introspection support
 if HAVE_INTROSPECTION
