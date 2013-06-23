@@ -344,7 +344,6 @@ gint
 main (gint argc, gchar **argv)
 {
   guint i;
-  g_type_init ();
   g_test_init (&argc, &argv, NULL);
 
   g_test_add ("/skeltrack/skeleton/init",
