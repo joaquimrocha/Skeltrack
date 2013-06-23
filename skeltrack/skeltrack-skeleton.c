@@ -1807,7 +1807,7 @@ skeltrack_skeleton_new (void)
 }
 
 /**
- * skeltrack_skeleton_set_focus_point:
+ * skeltrack_skeleton_get_focus_point:
  * @self: The #SkeltrackSkeleton
  * @x: The x coordinate of the focus point.
  * @y: The y coordinate of the focus point.
