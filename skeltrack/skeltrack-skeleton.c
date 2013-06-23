@@ -179,7 +179,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
   /* install properties */
 
   /**
-   * SkeltrackSkeleton:dimension-reduction
+   * SkeltrackSkeleton:dimension-reduction:
    *
    * The value by which the dimension of the buffer was reduced
    * (in case it was).
@@ -196,7 +196,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:graph-distance-threshold
+   * SkeltrackSkeleton:graph-distance-threshold:
    *
    * The value (in mm) for the distance threshold between each node and its
    * neighbors. This means that a node in the graph will only be connected
@@ -215,7 +215,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:graph-minimum-number-nodes
+   * SkeltrackSkeleton:graph-minimum-number-nodes:
    *
    * The minimum number of nodes each of the graph's components
    * should have (when it is not fully connected).
@@ -233,7 +233,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:hands-minimum-distance
+   * SkeltrackSkeleton:hands-minimum-distance:
    *
    * The minimum distance (in mm) that each hand should be from its
    * respective shoulder.
@@ -253,7 +253,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-circumference-radius
+   * SkeltrackSkeleton:shoulders-circumference-radius:
    *
    * The radius of the circumference (in mm) from the head with which
    * to look for the shoulders.
@@ -272,7 +272,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-arc-start-point
+   * SkeltrackSkeleton:shoulders-arc-start-point:
    *
    * The starting point (in mm) of the arc (from the bottom of the
    * shoulders' circumference) where the shoulders will be searched for.
@@ -295,7 +295,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:shoulders-arc-length
+   * SkeltrackSkeleton:shoulders-arc-length:
    *
    * The length (in mm) of the arc where the shoulders will be searched.
    * This length is used together with the
@@ -317,7 +317,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
 
 
   /**
-   * SkeltrackSkeleton:shoulders-search-step
+   * SkeltrackSkeleton:shoulders-search-step:
    *
    * The step considered for sampling the shoulders' circumference
    * when searching for the shoulders.
@@ -336,7 +336,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                              G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:smoothing-factor
+   * SkeltrackSkeleton:smoothing-factor:
    *
    * The factor by which the joints should be smoothed. This refers to
    * Holt's Double Exponential Smoothing and determines how the current and
@@ -356,7 +356,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                              G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:joints-persistency
+   * SkeltrackSkeleton:joints-persistency:
    *
    * The number of times that a joint can be null until its previous
    * value is discarded. For example, if this property is 3, the last value for
@@ -378,7 +378,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                             G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:enable-smoothing
+   * SkeltrackSkeleton:enable-smoothing:
    *
    * Whether smoothing the joints should be applied or not.
    *
@@ -394,7 +394,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                                G_PARAM_STATIC_STRINGS));
 
   /**
-    * SkeltrackSkeleton:torso-minimum-number-nodes
+    * SkeltrackSkeleton:torso-minimum-number-nodes:
     *
     * Minimum number of nodes for a component to be considered torso.
     *
@@ -413,7 +413,7 @@ skeltrack_skeleton_class_init (SkeltrackSkeletonClass *class)
                                              G_PARAM_STATIC_STRINGS));
 
   /**
-   * SkeltrackSkeleton:extrema-sphere-radius
+   * SkeltrackSkeleton:extrema-sphere-radius:
    *
    * The radius of the sphere around the extremas (in mm).
    *
