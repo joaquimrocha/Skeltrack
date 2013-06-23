@@ -1823,6 +1823,8 @@ skeltrack_skeleton_get_focus_point (SkeltrackSkeleton   *self,
                                     gint                *y,
                                     gint                *z)
 {
+  g_return_if_fail (SKELTRACK_IS_SKELETON (self));
+
   *x = self->priv->focus_node->x;
   *y = self->priv->focus_node->y;
   *z = self->priv->focus_node->z;
@@ -1849,6 +1851,8 @@ skeltrack_skeleton_set_focus_point (SkeltrackSkeleton   *self,
                                     gint                 y,
                                     gint                 z)
 {
+  g_return_if_fail (SKELTRACK_IS_SKELETON (self));
+
   self->priv->focus_node->x = x;
   self->priv->focus_node->y = y;
   self->priv->focus_node->z = z;
