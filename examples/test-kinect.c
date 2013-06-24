@@ -12,6 +12,8 @@ static GFreenectDevice *kinect = NULL;
 static ClutterActor *info_text;
 static ClutterActor *depth_tex;
 static ClutterActor *video_tex;
+static ClutterContent *depth_canvas;
+static ClutterContent *depth_image = NULL;
 static SkeltrackJointList list = NULL;
 
 static gboolean SHOW_SKELETON = TRUE;
@@ -41,6 +43,7 @@ on_track_joints (GObject      *obj,
   BufferInfo *buffer_info;
   guint16 *reduced;
   gint width, height, reduced_width, reduced_height;
+  ClutterContent *content;
   GError *error = NULL;
 
   buffer_info = (BufferInfo *) user_data;
@@ -57,7 +60,10 @@ on_track_joints (GObject      *obj,
   if (error == NULL)
     {
       if (SHOW_SKELETON)
-        clutter_cairo_texture_invalidate (CLUTTER_CAIRO_TEXTURE (depth_tex));
+        {
+          content = clutter_actor_get_content (depth_tex);
+          clutter_content_invalidate (content);
+        }
     }
   else
     {
@@ -173,6 +179,7 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
   gsize len;
   GError *error = NULL;
   GFreenectFrameMode frame_mode;
+  ClutterContent *content;
 
   depth = (guint16 *) gfreenect_device_get_depth_frame_raw (kinect,
                                                             &len,
@@ -199,24 +206,39 @@ on_depth_frame (GFreenectDevice *kinect, gpointer user_data)
                                    buffer_info);
 
 
+  content = clutter_actor_get_content (depth_tex);
   if (!SHOW_SKELETON)
     {
       grayscale_buffer = create_grayscale_buffer (buffer_info,
                                                   dimension_factor);
-      if (! clutter_texture_set_from_rgb_data (CLUTTER_TEXTURE (depth_tex),
-                                               grayscale_buffer,
-                                               FALSE,
-                                               width, height,
-                                               0,
-                                               3,
-                                               CLUTTER_TEXTURE_NONE,
-                                               &error))
+
+      if (depth_image == NULL)
+        depth_image = clutter_image_new ();
+
+      /* ref because we don't want it to be freed */
+      if (depth_canvas == content)
+        g_object_ref (depth_canvas);
+
+      clutter_actor_set_content (depth_tex, depth_image);
+      if (! clutter_image_set_data (CLUTTER_IMAGE (depth_image),
+                                    grayscale_buffer,
+                                    COGL_PIXEL_FORMAT_RGB_888,
+                                    width, height,
+                                    0,
+                                    &error))
         {
           g_debug ("Error setting texture area: %s", error->message);
           g_error_free (error);
         }
       g_slice_free1 (width * height * sizeof (guchar) * 3, grayscale_buffer);
     }
+  else {
+    /* ref because we don't want it to be freed */
+    if (depth_image && depth_image == content)
+      g_object_ref (depth_image);
+
+    clutter_actor_set_content (depth_tex, depth_canvas);
+  }
 }
 
 static void
@@ -225,17 +247,17 @@ on_video_frame (GFreenectDevice *kinect, gpointer user_data)
   guchar *buffer;
   GError *error = NULL;
   GFreenectFrameMode frame_mode;
+  ClutterContent *content;
 
   buffer = gfreenect_device_get_video_frame_rgb (kinect, NULL, &frame_mode);
+  content = clutter_actor_get_content (video_tex);
 
-  if (! clutter_texture_set_from_rgb_data (CLUTTER_TEXTURE (video_tex),
-                                           buffer,
-                                           FALSE,
-                                           frame_mode.width, frame_mode.height,
-                                           0,
-                                           frame_mode.bits_per_pixel / 8,
-                                           CLUTTER_TEXTURE_NONE,
-                                           &error))
+  if (! clutter_image_set_data (CLUTTER_IMAGE (content),
+                                buffer,
+                                COGL_PIXEL_FORMAT_RGB_888,
+                                frame_mode.width, frame_mode.height,
+                                0,
+                                &error))
     {
       g_debug ("Error setting texture area: %s", error->message);
       g_error_free (error);
@@ -294,17 +316,19 @@ connect_joints (cairo_t *cairo,
   clutter_color_free (color);
 }
 
-static void
-on_texture_draw (ClutterCairoTexture *texture,
-                 cairo_t *cairo,
-                 gpointer user_data)
+static gboolean
+on_skeleton_draw (ClutterCanvas *canvas,
+                  cairo_t *cairo,
+                  gint width,
+                  gint height,
+                  gpointer user_data)
 {
-  guint width, height;
   ClutterColor *color;
   SkeltrackJoint *head, *left_hand, *right_hand,
     *left_shoulder, *right_shoulder, *left_elbow, *right_elbow;
+
   if (list == NULL)
-    return;
+    return FALSE;
 
   head = skeltrack_joint_list_get_joint (list,
                                          SKELTRACK_JOINT_ID_HEAD);
@@ -322,8 +346,6 @@ on_texture_draw (ClutterCairoTexture *texture,
                                                 SKELTRACK_JOINT_ID_RIGHT_ELBOW);
 
   /* Paint it white */
-  clutter_cairo_texture_clear (texture);
-  clutter_cairo_texture_get_surface_size (texture, &width, &height);
   color = clutter_color_new (255, 255, 255, 255);
   clutter_cairo_set_source_color (cairo, color);
   cairo_rectangle (cairo, 0, 0, width, height);
@@ -348,6 +370,8 @@ on_texture_draw (ClutterCairoTexture *texture,
 
   skeltrack_joint_list_free (list);
   list = NULL;
+
+  return FALSE;
 }
 
 static void
@@ -479,7 +503,15 @@ create_instructions (void)
 static void
 on_destroy (ClutterActor *actor, gpointer data)
 {
+  ClutterContent *content;
   GFreenectDevice *device = GFREENECT_DEVICE (data);
+
+  content = clutter_actor_get_content (depth_tex);
+  if (content == depth_canvas)
+    g_object_unref (depth_image);
+  else
+    g_object_unref (depth_canvas);
+
   gfreenect_device_stop_depth_stream (device, NULL);
   gfreenect_device_stop_video_stream (device, NULL);
   clutter_main_quit ();
@@ -506,7 +538,7 @@ on_new_kinect_device (GObject      *obj,
 
   g_debug ("Kinect device created!");
 
-  stage = clutter_stage_get_default ();
+  stage = clutter_stage_new ();
   clutter_stage_set_title (CLUTTER_STAGE (stage), "Kinect Test");
   clutter_actor_set_size (stage, width * 2, height + 250);
   clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
@@ -517,22 +549,26 @@ on_new_kinect_device (GObject      *obj,
                     G_CALLBACK (on_key_release),
                     kinect);
 
-  depth_tex = clutter_cairo_texture_new (width, height);
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), depth_tex);
+  depth_tex = clutter_actor_new ();
+  depth_canvas = clutter_canvas_new ();
+  clutter_actor_set_content (depth_tex, depth_canvas);
+  clutter_canvas_set_size (CLUTTER_CANVAS (depth_canvas), width, height);
+  clutter_actor_set_size (depth_tex, width, height);
+  clutter_actor_add_child (stage, depth_tex);
 
-  video_tex = clutter_cairo_texture_new (width, height);
+  video_tex = clutter_actor_new ();
+  clutter_actor_set_content (video_tex, clutter_image_new ());
+  clutter_actor_set_size (video_tex, width, height);
   clutter_actor_set_position (video_tex, width, 0.0);
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), video_tex);
+  clutter_actor_add_child (stage, video_tex);
 
   info_text = clutter_text_new ();
   clutter_actor_set_position (info_text, 50, height + 20);
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), info_text);
+  clutter_actor_add_child (stage, info_text);
 
   instructions = create_instructions ();
   clutter_actor_set_position (instructions, 50, height + 70);
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), instructions);
-
-  clutter_actor_show_all (stage);
+  clutter_actor_add_child (stage, instructions);
 
   skeleton = skeltrack_skeleton_new ();
   g_object_get (skeleton, "smoothing-factor", &SMOOTHING_FACTOR, NULL);
@@ -549,9 +585,9 @@ on_new_kinect_device (GObject      *obj,
                     G_CALLBACK (on_video_frame),
                     NULL);
 
-  g_signal_connect (depth_tex,
+  g_signal_connect (depth_canvas,
                     "draw",
-                    G_CALLBACK (on_texture_draw),
+                    G_CALLBACK (on_skeleton_draw),
                     NULL);
 
   gfreenect_device_set_tilt_angle (kinect, 0, NULL, NULL, NULL);
@@ -563,6 +599,8 @@ on_new_kinect_device (GObject      *obj,
   gfreenect_device_start_video_stream (kinect,
                                        GFREENECT_RESOLUTION_MEDIUM,
                                        GFREENECT_VIDEO_FORMAT_RGB, NULL);
+
+  clutter_actor_show (stage);
 }
 
 static void
