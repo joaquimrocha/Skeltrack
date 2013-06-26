@@ -1,0 +1,603 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>SkeltrackSkeleton</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
+<link rel="home" href="index.html" title="Skeltrack - Reference Manual">
+<link rel="up" href="skeltrackbase.html" title="Part II. Skeltrack Core Reference">
+<link rel="prev" href="skeltrackbase.html" title="Part II. Skeltrack Core Reference">
+<link rel="next" href="skeltrack-skeltrack-joint.html" title="skeltrack-joint">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="skeltrackbase.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="skeltrackbase.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Skeltrack - Reference Manual</th>
+<td><a accesskey="n" href="skeltrack-skeltrack-joint.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#SkeltrackSkeleton.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#SkeltrackSkeleton.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#SkeltrackSkeleton.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#SkeltrackSkeleton.properties" class="shortcut">Properties</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="SkeltrackSkeleton"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="SkeltrackSkeleton.top_of_page"></a>SkeltrackSkeleton</span></h2>
+<p>SkeltrackSkeleton — Object that tracks the joints in a human skeleton</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="SkeltrackSkeleton.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">struct              <a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton-struct" title="struct SkeltrackSkeleton">SkeltrackSkeleton</a>;
+struct              <a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeletonClass" title="struct SkeltrackSkeletonClass">SkeltrackSkeletonClass</a>;
+<a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="returnvalue">SkeltrackSkeleton</span></a> * <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-new" title="skeltrack_skeleton_new ()">skeltrack_skeleton_new</a>              (<em class="parameter"><code><span class="type">void</span></code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints" title="skeltrack_skeleton_track_joints ()">skeltrack_skeleton_track_joints</a>     (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint16</span> *buffer</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>,
+                                                         <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                                                         <em class="parameter"><code><span class="type">GAsyncReadyCallback</span> callback</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);
+<a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-finish" title="skeltrack_skeleton_track_joints_finish ()">skeltrack_skeleton_track_joints_finish</a>
+                                                        (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">GAsyncResult</span> *result</code></em>,
+                                                         <em class="parameter"><code><span class="type">GError</span> **error</code></em>);
+<a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-sync" title="skeltrack_skeleton_track_joints_sync ()">skeltrack_skeleton_track_joints_sync</a>
+                                                        (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint16</span> *buffer</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>,
+                                                         <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                                                         <em class="parameter"><code><span class="type">GError</span> **error</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-get-focus-point" title="skeltrack_skeleton_get_focus_point ()">skeltrack_skeleton_get_focus_point</a>  (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *x</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *y</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *z</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-set-focus-point" title="skeltrack_skeleton_set_focus_point ()">skeltrack_skeleton_set_focus_point</a>  (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> x</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> y</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> z</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="SkeltrackSkeleton.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GObject
+   +----SkeltrackSkeleton
+</pre>
+</div>
+<div class="refsect1">
+<a name="SkeltrackSkeleton.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--dimension-reduction" title='The "dimension-reduction" property'>dimension-reduction</a>"      <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--enable-smoothing" title='The "enable-smoothing" property'>enable-smoothing</a>"         <span class="type">gboolean</span>              : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--extrema-sphere-radius" title='The "extrema-sphere-radius" property'>extrema-sphere-radius</a>"    <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-distance-threshold" title='The "graph-distance-threshold" property'>graph-distance-threshold</a>" <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-minimum-number-nodes" title='The "graph-minimum-number-nodes" property'>graph-minimum-number-nodes</a>" <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--hands-minimum-distance" title='The "hands-minimum-distance" property'>hands-minimum-distance</a>"   <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--joints-persistency" title='The "joints-persistency" property'>joints-persistency</a>"       <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-length" title='The "shoulders-arc-length" property'>shoulders-arc-length</a>"     <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-start-point" title='The "shoulders-arc-start-point" property'>shoulders-arc-start-point</a>" <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-circumference-radius" title='The "shoulders-circumference-radius" property'>shoulders-circumference-radius</a>" <span class="type">guint</span>                 : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-search-step" title='The "shoulders-search-step" property'>shoulders-search-step</a>"    <span class="type">gfloat</span>                : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--smoothing-factor" title='The "smoothing-factor" property'>smoothing-factor</a>"         <span class="type">gfloat</span>                : Read / Write
+  "<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--torso-minimum-number-nodes" title='The "torso-minimum-number-nodes" property'>torso-minimum-number-nodes</a>" <span class="type">gfloat</span>                : Read / Write
+</pre>
+</div>
+<div class="refsect1">
+<a name="SkeltrackSkeleton.description"></a><h2>Description</h2>
+<p>
+This object tries to detect joints of the human skeleton.
+</p>
+<p>
+To track the joints, first create an instance of <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> using
+<a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-new" title="skeltrack_skeleton_new ()"><code class="function">skeltrack_skeleton_new()</code></a> and then set a buffer from where the joints will
+be retrieved using the asynchronous function
+<a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints" title="skeltrack_skeleton_track_joints ()"><code class="function">skeltrack_skeleton_track_joints()</code></a> and get the list of joints using
+<a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-finish" title="skeltrack_skeleton_track_joints_finish ()"><code class="function">skeltrack_skeleton_track_joints_finish()</code></a>.
+</p>
+<p>
+A common use case is to use this library together with a Kinect device so
+an easy way to retrieve the needed buffer is to use the GFreenect library.
+</p>
+<p>
+It currently tracks the joints identified by <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> .
+</p>
+<p>
+Tracking the skeleton joints can be computational heavy so it is advised that
+the given buffer's dimension is reduced before setting it. To do it,
+simply choose the reduction factor and loop through the original buffer
+(using this factor as a step) and set the reduced buffer's values accordingly.
+The <a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--dimension-reduction" title='The "dimension-reduction" property'><span class="type">"dimension-reduction"</span></a> property holds this reduction
+value and should be changed to the reduction factor used (alternatively you
+can retrieve its default value and use it in the reduction, if it fits your
+needs).
+</p>
+<p>
+The skeleton tracking uses a few heuristics that proved to work well for
+tested cases but they can be tweaked by changing the following properties:
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-distance-threshold" title='The "graph-distance-threshold" property'><span class="type">"graph-distance-threshold"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-minimum-number-nodes" title='The "graph-minimum-number-nodes" property'><span class="type">"graph-minimum-number-nodes"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--hands-minimum-distance" title='The "hands-minimum-distance" property'><span class="type">"hands-minimum-distance"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-start-point" title='The "shoulders-arc-start-point" property'><span class="type">"shoulders-arc-start-point"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-length" title='The "shoulders-arc-length" property'><span class="type">"shoulders-arc-length"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-circumference-radius" title='The "shoulders-circumference-radius" property'><span class="type">"shoulders-circumference-radius"</span></a> ,
+<a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-search-step" title='The "shoulders-search-step" property'><span class="type">"shoulders-search-step"</span></a> .
+</p>
+</div>
+<div class="refsect1">
+<a name="SkeltrackSkeleton.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="SkeltrackSkeleton-struct"></a><h3>struct SkeltrackSkeleton</h3>
+<pre class="programlisting">struct SkeltrackSkeleton;</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeletonClass"></a><h3>struct SkeltrackSkeletonClass</h3>
+<pre class="programlisting">struct SkeltrackSkeletonClass {
+  GObjectClass parent_class;
+};
+</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-new"></a><h3>skeltrack_skeleton_new ()</h3>
+<pre class="programlisting"><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="returnvalue">SkeltrackSkeleton</span></a> * skeltrack_skeleton_new              (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<p>
+Constructs and returns a new <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> instance.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The newly created <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-track-joints"></a><h3>skeltrack_skeleton_track_joints ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                skeltrack_skeleton_track_joints     (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint16</span> *buffer</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>,
+                                                         <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                                                         <em class="parameter"><code><span class="type">GAsyncReadyCallback</span> callback</code></em>,
+                                                         <em class="parameter"><code><span class="type">gpointer</span> user_data</code></em>);</pre>
+<p>
+Tracks the skeleton's joints.
+</p>
+<p>
+It uses the depth information contained in the given <em class="parameter"><code>buffer</code></em> and tries to
+track the skeleton joints. The <em class="parameter"><code>buffer</code></em>'s depth values should be in mm.
+Use <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-finish" title="skeltrack_skeleton_track_joints_finish ()"><code class="function">skeltrack_skeleton_track_joints_finish()</code></a> to get a list of the joints
+found.
+</p>
+<p>
+If this method is called while a previous attempt of tracking the joints
+is still running, a <code class="literal">G_IO_ERROR_PENDING</code> error occurs.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>self</code></em> :</span></p></td>
+<td>The <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>buffer</code></em> :</span></p></td>
+<td>The buffer containing the depth information, from which
+all the information will be retrieved.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>width</code></em> :</span></p></td>
+<td>The width of the <em class="parameter"><code>buffer</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>height</code></em> :</span></p></td>
+<td>The height of the <em class="parameter"><code>buffer</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>cancellable</code></em> :</span></p></td>
+<td>A cancellable object, or <code class="literal">NULL</code> (currently
+unused). <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>callback</code></em> :</span></p></td>
+<td>The function to call when the it is finished
+tracking the joints. <span class="annotation">[<acronym title="The callback is valid until first called."><span class="acronym">scope async</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>An arbitrary user data to pass in <em class="parameter"><code>callback</code></em>,
+or <code class="literal">NULL</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-track-joints-finish"></a><h3>skeltrack_skeleton_track_joints_finish ()</h3>
+<pre class="programlisting"><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  skeltrack_skeleton_track_joints_finish
+                                                        (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">GAsyncResult</span> *result</code></em>,
+                                                         <em class="parameter"><code><span class="type">GError</span> **error</code></em>);</pre>
+<p>
+Gets the list of joints that were retrieved by a
+<a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints" title="skeltrack_skeleton_track_joints ()"><code class="function">skeltrack_skeleton_track_joints()</code></a> operation.
+</p>
+<p>
+Use <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-get-joint" title="skeltrack_joint_list_get_joint ()"><code class="function">skeltrack_joint_list_get_joint()</code></a> with <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a>
+to get the respective joints from the list.
+Joints that could not be found will appear as <code class="literal">NULL</code> in the list.
+</p>
+<p>
+The list should be freed using <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()"><code class="function">skeltrack_joint_list_free()</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>self</code></em> :</span></p></td>
+<td>The <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>result</code></em> :</span></p></td>
+<td>The <span class="type">GAsyncResult</span> provided in the callback</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
+<td>A pointer to a <span class="type">GError</span>, or <code class="literal">NULL</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> with the joints found. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-track-joints-sync"></a><h3>skeltrack_skeleton_track_joints_sync ()</h3>
+<pre class="programlisting"><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  skeltrack_skeleton_track_joints_sync
+                                                        (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint16</span> *buffer</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> width</code></em>,
+                                                         <em class="parameter"><code><span class="type">guint</span> height</code></em>,
+                                                         <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                                                         <em class="parameter"><code><span class="type">GError</span> **error</code></em>);</pre>
+<p>
+Tracks the skeleton's joints synchronously.
+</p>
+<p>
+Does the same as <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints" title="skeltrack_skeleton_track_joints ()"><code class="function">skeltrack_skeleton_track_joints()</code></a> but synchronously
+and returns the list of joints found.
+Ideal for off-line skeleton tracking.
+</p>
+<p>
+If this method is called while a previous attempt of asynchronously
+tracking the joints is still running, a <code class="literal">G_IO_ERROR_PENDING</code> error occurs.
+</p>
+<p>
+The joints list should be freed using <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()"><code class="function">skeltrack_joint_list_free()</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>self</code></em> :</span></p></td>
+<td>The <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>buffer</code></em> :</span></p></td>
+<td>The buffer containing the depth information, from which
+all the information will be retrieved.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>width</code></em> :</span></p></td>
+<td>The width of the <em class="parameter"><code>buffer</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>height</code></em> :</span></p></td>
+<td>The height of the <em class="parameter"><code>buffer</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>cancellable</code></em> :</span></p></td>
+<td>A cancellable object, or <code class="literal">NULL</code> (currently
+unused). <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
+<td>A pointer to a <span class="type">GError</span>, or <code class="literal">NULL</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> with the joints found. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-get-focus-point"></a><h3>skeltrack_skeleton_get_focus_point ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                skeltrack_skeleton_get_focus_point  (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *x</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *y</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> *z</code></em>);</pre>
+<p>
+Gets the focus point which is the origin from where the tracking will
+start. The coordinates will be in mm.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>self</code></em> :</span></p></td>
+<td>The <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>x</code></em> :</span></p></td>
+<td>The x coordinate of the focus point.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>y</code></em> :</span></p></td>
+<td>The y coordinate of the focus point.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>z</code></em> :</span></p></td>
+<td>The z coordinate of the focus point.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-skeleton-set-focus-point"></a><h3>skeltrack_skeleton_set_focus_point ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                skeltrack_skeleton_set_focus_point  (<em class="parameter"><code><a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> *self</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> x</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> y</code></em>,
+                                                         <em class="parameter"><code><span class="type">gint</span> z</code></em>);</pre>
+<p>
+Sets the focus point which is the origin from where the tracking will
+start. The coordinates should be in mm.
+</p>
+<p>
+If this method is not called the default values are <em class="parameter"><code>x</code></em> = 0, <em class="parameter"><code>y</code></em> = 0,
+<em class="parameter"><code>z</code></em> = 1000, that is, in the center of the screen and at 1m from the
+camera.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>self</code></em> :</span></p></td>
+<td>The <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>x</code></em> :</span></p></td>
+<td>The x coordinate of the focus point.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>y</code></em> :</span></p></td>
+<td>The y coordinate of the focus point.</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>z</code></em> :</span></p></td>
+<td>The z coordinate of the focus point.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1">
+<a name="SkeltrackSkeleton.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--dimension-reduction"></a><h3>The <code class="literal">"dimension-reduction"</code> property</h3>
+<pre class="programlisting">  "dimension-reduction"      <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The value by which the dimension of the buffer was reduced
+(in case it was).
+</p>
+<p>Allowed values: [1,1024]</p>
+<p>Default value: 16</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--enable-smoothing"></a><h3>The <code class="literal">"enable-smoothing"</code> property</h3>
+<pre class="programlisting">  "enable-smoothing"         <span class="type">gboolean</span>              : Read / Write</pre>
+<p>
+Whether smoothing the joints should be applied or not.
+</p>
+<p>Default value: TRUE</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--extrema-sphere-radius"></a><h3>The <code class="literal">"extrema-sphere-radius"</code> property</h3>
+<pre class="programlisting">  "extrema-sphere-radius"    <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The radius of the sphere around the extremas (in mm).
+</p>
+<p>
+Points inside this sphere are considered for calculating the average position
+of the extrema. If the value is 0, no averaging is done.
+</p>
+<p>Allowed values: &lt;= 65535</p>
+<p>Default value: 300</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--graph-distance-threshold"></a><h3>The <code class="literal">"graph-distance-threshold"</code> property</h3>
+<pre class="programlisting">  "graph-distance-threshold" <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The value (in mm) for the distance threshold between each node and its
+neighbors. This means that a node in the graph will only be connected
+to another if they aren't farther apart then this value.
+</p>
+<p>Allowed values: [1,65535]</p>
+<p>Default value: 150</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--graph-minimum-number-nodes"></a><h3>The <code class="literal">"graph-minimum-number-nodes"</code> property</h3>
+<pre class="programlisting">  "graph-minimum-number-nodes" <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The minimum number of nodes each of the graph's components
+should have (when it is not fully connected).
+</p>
+<p>Allowed values: [1,65535]</p>
+<p>Default value: 5</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--hands-minimum-distance"></a><h3>The <code class="literal">"hands-minimum-distance"</code> property</h3>
+<pre class="programlisting">  "hands-minimum-distance"   <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The minimum distance (in mm) that each hand should be from its
+respective shoulder.
+</p>
+<p>Allowed values: &gt;= 300</p>
+<p>Default value: 550</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--joints-persistency"></a><h3>The <code class="literal">"joints-persistency"</code> property</h3>
+<pre class="programlisting">  "joints-persistency"       <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The number of times that a joint can be null until its previous
+value is discarded. For example, if this property is 3, the last value for
+a joint will keep being used until the new value for this joint is null for
+3 consecutive times.
+</p>
+<p>Allowed values: &lt;= 65535</p>
+<p>Default value: 3</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--shoulders-arc-length"></a><h3>The <code class="literal">"shoulders-arc-length"</code> property</h3>
+<pre class="programlisting">  "shoulders-arc-length"     <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The length (in mm) of the arc where the shoulders will be searched.
+This length is used together with the
+SkeltrackSkeleton::shoulders-arc-start-point to determine the arc
+where the shoulders' points will be looked for.
+</p>
+<p>Allowed values: [1,65535]</p>
+<p>Default value: 250</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--shoulders-arc-start-point"></a><h3>The <code class="literal">"shoulders-arc-start-point"</code> property</h3>
+<pre class="programlisting">  "shoulders-arc-start-point" <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The starting point (in mm) of the arc (from the bottom of the
+shoulders' circumference) where the shoulders will be searched for.
+This point is used together with the
+SkeltrackSkeleton::shoulders-arc-length to determine the arc
+where the shoulders' points will be looked for.
+</p>
+<p>Allowed values: [1,65535]</p>
+<p>Default value: 100</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--shoulders-circumference-radius"></a><h3>The <code class="literal">"shoulders-circumference-radius"</code> property</h3>
+<pre class="programlisting">  "shoulders-circumference-radius" <span class="type">guint</span>                 : Read / Write</pre>
+<p>
+The radius of the circumference (in mm) from the head with which
+to look for the shoulders.
+</p>
+<p>Allowed values: [1,65535]</p>
+<p>Default value: 300</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--shoulders-search-step"></a><h3>The <code class="literal">"shoulders-search-step"</code> property</h3>
+<pre class="programlisting">  "shoulders-search-step"    <span class="type">gfloat</span>                : Read / Write</pre>
+<p>
+The step considered for sampling the shoulders' circumference
+when searching for the shoulders.
+</p>
+<p>Allowed values: [0.01,3.14159]</p>
+<p>Default value: 0.01</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--smoothing-factor"></a><h3>The <code class="literal">"smoothing-factor"</code> property</h3>
+<pre class="programlisting">  "smoothing-factor"         <span class="type">gfloat</span>                : Read / Write</pre>
+<p>
+The factor by which the joints should be smoothed. This refers to
+Holt's Double Exponential Smoothing and determines how the current and
+previous data and trend will be used. A value closer to 0 will produce smoother
+results but increases latency.
+</p>
+<p>Allowed values: [0,1]</p>
+<p>Default value: 0.5</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackSkeleton--torso-minimum-number-nodes"></a><h3>The <code class="literal">"torso-minimum-number-nodes"</code> property</h3>
+<pre class="programlisting">  "torso-minimum-number-nodes" <span class="type">gfloat</span>                : Read / Write</pre>
+<p>
+Minimum number of nodes for a component to be considered torso.
+</p>
+<p>Allowed values: [0,65535]</p>
+<p>Default value: 16</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.19.1</div>
+</body>
+</html>

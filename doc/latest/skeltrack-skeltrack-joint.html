@@ -1,0 +1,337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>skeltrack-joint</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
+<link rel="home" href="index.html" title="Skeltrack - Reference Manual">
+<link rel="up" href="skeltrackbase.html" title="Part II. Skeltrack Core Reference">
+<link rel="prev" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton">
+<link rel="next" href="skeltrackobjects.html" title="Part III. Skeltrack Objects">
+<meta name="generator" content="GTK-Doc V1.19.1 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="SkeltrackSkeleton.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="skeltrackbase.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">Skeltrack - Reference Manual</th>
+<td><a accesskey="n" href="skeltrackobjects.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#skeltrack-skeltrack-joint.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#skeltrack-skeltrack-joint.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#skeltrack-skeltrack-joint.object-hierarchy" class="shortcut">Object Hierarchy</a>
+</td></tr>
+</table>
+<div class="refentry">
+<a name="skeltrack-skeltrack-joint"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="skeltrack-skeltrack-joint.top_of_page"></a>skeltrack-joint</span></h2>
+<p>skeltrack-joint — Data structure that holds information about
+a skeleton joint.</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv">
+<a name="skeltrack-skeltrack-joint.synopsis"></a><h2>Synopsis</h2>
+<a name="SkeltrackJoint"></a><pre class="synopsis">#define             <a class="link" href="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-MAX-JOINTS:CAPS" title="SKELTRACK_JOINT_MAX_JOINTS">SKELTRACK_JOINT_MAX_JOINTS</a>
+typedef             <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList">SkeltrackJointList</a>;
+enum                <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId">SkeltrackJointId</a>;
+struct              <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint-struct" title="struct SkeltrackJoint">SkeltrackJoint</a>;
+<span class="returnvalue">gpointer</span>            <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-copy" title="skeltrack_joint_copy ()">skeltrack_joint_copy</a>                (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> *joint</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-free" title="skeltrack_joint_free ()">skeltrack_joint_free</a>                (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> *joint</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()">skeltrack_joint_list_free</a>           (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> list</code></em>);
+<a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-new" title="skeltrack_joint_list_new ()">skeltrack_joint_list_new</a>            (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="returnvalue">SkeltrackJoint</span></a> *    <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-get-joint" title="skeltrack_joint_list_get_joint ()">skeltrack_joint_list_get_joint</a>      (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> list</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> id</code></em>);
+</pre>
+</div>
+<div class="refsect1">
+<a name="skeltrack-skeltrack-joint.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  GBoxed
+   +----SkeltrackJoint
+</pre>
+</div>
+<div class="refsect1">
+<a name="skeltrack-skeltrack-joint.description"></a><h2>Description</h2>
+<p>
+A <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> is built automatically by <a class="link" href="SkeltrackSkeleton.html" title="SkeltrackSkeleton"><span class="type">SkeltrackSkeleton</span></a> when
+it finds a skeleton joint and can be used to get information about it.
+Each <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> holds an id, given by <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> that indicates
+which of the human skeleton joints it represents.
+</p>
+<p>
+Spacial information about a joint is given by the <em class="parameter"><code>x</code></em>, <em class="parameter"><code>y</code></em> and <em class="parameter"><code>z</code></em> coordinates.
+To represent the joint in a 2D, the variables <em class="parameter"><code>screen_x</code></em> and
+<em class="parameter"><code>screen_y</code></em> will indicate the joint's position in the screen and are calculated
+taking into account the <a class="link" href="SkeltrackSkeleton.html#SkeltrackSkeleton--dimension-reduction" title='The "dimension-reduction" property'><span class="type">"dimension-reduction"</span></a> (it will
+be multiplied by this value).
+</p>
+<p>
+The tracked list of joints is represented by <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> and given
+by <a class="link" href="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-finish" title="skeltrack_skeleton_track_joints_finish ()"><code class="function">skeltrack_skeleton_track_joints_finish()</code></a>.
+To get a <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> from a <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> object, use the
+<a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-get-joint" title="skeltrack_joint_list_get_joint ()"><code class="function">skeltrack_joint_list_get_joint()</code></a> indicating the needed <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a>.
+</p>
+<p>
+A <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> can be freed by using <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()"><code class="function">skeltrack_joint_list_free()</code></a>.
+A <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> can be copied by <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-copy" title="skeltrack_joint_copy ()"><code class="function">skeltrack_joint_copy()</code></a> and freed by
+<a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-free" title="skeltrack_joint_free ()"><code class="function">skeltrack_joint_free()</code></a>.
+</p>
+</div>
+<div class="refsect1">
+<a name="skeltrack-skeltrack-joint.details"></a><h2>Details</h2>
+<div class="refsect2">
+<a name="SKELTRACK-JOINT-MAX-JOINTS:CAPS"></a><h3>SKELTRACK_JOINT_MAX_JOINTS</h3>
+<pre class="programlisting">#define SKELTRACK_JOINT_MAX_JOINTS 7
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackJointList"></a><h3>SkeltrackJointList</h3>
+<pre class="programlisting">typedef SkeltrackJoint **SkeltrackJointList;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackJointId"></a><h3>enum SkeltrackJointId</h3>
+<pre class="programlisting">typedef enum {
+  SKELTRACK_JOINT_ID_HEAD,
+  SKELTRACK_JOINT_ID_LEFT_SHOULDER,
+  SKELTRACK_JOINT_ID_RIGHT_SHOULDER,
+  SKELTRACK_JOINT_ID_LEFT_ELBOW,
+  SKELTRACK_JOINT_ID_RIGHT_ELBOW,
+  SKELTRACK_JOINT_ID_LEFT_HAND,
+  SKELTRACK_JOINT_ID_RIGHT_HAND
+} SkeltrackJointId;
+</pre>
+<p>
+Available joint ids.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-HEAD:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_HEAD</code></span></p></td>
+<td>The head
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-LEFT-SHOULDER:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_LEFT_SHOULDER</code></span></p></td>
+<td>The left shoulder
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-RIGHT-SHOULDER:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_RIGHT_SHOULDER</code></span></p></td>
+<td>The right shoulder
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-LEFT-ELBOW:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_LEFT_ELBOW</code></span></p></td>
+<td>The left elbow
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-RIGHT-ELBOW:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_RIGHT_ELBOW</code></span></p></td>
+<td>The right elbow
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-LEFT-HAND:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_LEFT_HAND</code></span></p></td>
+<td>The left hand
+</td>
+</tr>
+<tr>
+<td><p><a name="SKELTRACK-JOINT-ID-RIGHT-HAND:CAPS"></a><span class="term"><code class="literal">SKELTRACK_JOINT_ID_RIGHT_HAND</code></span></p></td>
+<td>The right hand
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="SkeltrackJoint-struct"></a><h3>struct SkeltrackJoint</h3>
+<pre class="programlisting">struct SkeltrackJoint {
+  SkeltrackJointId id;
+
+  gint x;
+  gint y;
+  gint z;
+
+  gint screen_x;
+  gint screen_y;
+};
+</pre>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> <em class="structfield"><code><a name="SkeltrackJoint-struct.id"></a>id</code></em>;</span></p></td>
+<td>The id of the joint</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gint</span> <em class="structfield"><code><a name="SkeltrackJoint-struct.x"></a>x</code></em>;</span></p></td>
+<td>The x coordinate of the joint in the space (in mm)</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gint</span> <em class="structfield"><code><a name="SkeltrackJoint-struct.y"></a>y</code></em>;</span></p></td>
+<td>The y coordinate of the joint in the space (in mm)</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gint</span> <em class="structfield"><code><a name="SkeltrackJoint-struct.z"></a>z</code></em>;</span></p></td>
+<td>The z coordinate of the joint in the space (in mm)</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gint</span> <em class="structfield"><code><a name="SkeltrackJoint-struct.screen-x"></a>screen_x</code></em>;</span></p></td>
+<td>The x coordinate of the joint in the screen (in pixels)</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="type">gint</span> <em class="structfield"><code><a name="SkeltrackJoint-struct.screen-y"></a>screen_y</code></em>;</span></p></td>
+<td>The y coordinate of the joint in the screen (in pixels)</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-joint-copy"></a><h3>skeltrack_joint_copy ()</h3>
+<pre class="programlisting"><span class="returnvalue">gpointer</span>            skeltrack_joint_copy                (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> *joint</code></em>);</pre>
+<p>
+Makes an exact copy of a <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> object.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>joint</code></em> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> to copy</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>A newly created <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a>. Use
+<a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-free" title="skeltrack_joint_free ()"><code class="function">skeltrack_joint_free()</code></a> to free it. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-joint-free"></a><h3>skeltrack_joint_free ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                skeltrack_joint_free                (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> *joint</code></em>);</pre>
+<p>
+Frees a <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> object.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>joint</code></em> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> to free</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-joint-list-free"></a><h3>skeltrack_joint_list_free ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                skeltrack_joint_list_free           (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> list</code></em>);</pre>
+<p>
+Frees a <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> object and each <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a>
+in it.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>list</code></em> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> to free</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-joint-list-new"></a><h3>skeltrack_joint_list_new ()</h3>
+<pre class="programlisting"><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="returnvalue">SkeltrackJointList</span></a>  skeltrack_joint_list_new            (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<p>
+Created a new list of <span class="type">SkeltrackJointsList</span> with its joints as <span class="type">NULL</span>.
+When it is no longer needed, free it with <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()"><code class="function">skeltrack_joint_list_free()</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>A newly allocated <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a>. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2">
+<a name="skeltrack-joint-list-get-joint"></a><h3>skeltrack_joint_list_get_joint ()</h3>
+<pre class="programlisting"><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="returnvalue">SkeltrackJoint</span></a> *    skeltrack_joint_list_get_joint      (<em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a> list</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> id</code></em>);</pre>
+<p>
+Gets a joint from a list of skeleton joints. The joint
+returned needs to be freed by using <a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-free" title="skeltrack_joint_free ()"><code class="function">skeltrack_joint_free()</code></a> or,
+alternatively, the whole list and its joints can be freed by using
+<a class="link" href="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free" title="skeltrack_joint_list_free ()"><code class="function">skeltrack_joint_list_free()</code></a>.
+</p>
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
+<col align="left" valign="top">
+<col>
+</colgroup>
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>list</code></em> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointList" title="SkeltrackJointList"><span class="type">SkeltrackJointList</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>id</code></em> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJointId" title="enum SkeltrackJointId"><span class="type">SkeltrackJointId</span></a> of the joint to get</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>The <a class="link" href="skeltrack-skeltrack-joint.html#SkeltrackJoint"><span class="type">SkeltrackJoint</span></a> that corresponds to
+the given <em class="parameter"><code>id</code></em> or <code class="literal">NULL</code> if that joint wasn't found. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.19.1</div>
+</body>
+</html>

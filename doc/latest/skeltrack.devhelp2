@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE book PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "">
+<book xmlns="http://www.devhelp.net/book" title="Skeltrack - Reference Manual" link="index.html" author="" name="skeltrack" version="2" language="c">
+  <chapters>
+    <sub name="Overview" link="skeltrack-overview.html"/>
+    <sub name="Skeltrack Core Reference" link="skeltrackbase.html">
+      <sub name="SkeltrackSkeleton" link="SkeltrackSkeleton.html"/>
+      <sub name="skeltrack-joint" link="skeltrack-skeltrack-joint.html"/>
+    </sub>
+    <sub name="Skeltrack Objects" link="skeltrackobjects.html">
+      <sub name="Object Hierarchy" link="skeltrackobjecthierarchy.html"/>
+      <sub name="Object Index" link="skeltrackobjectindex.html"/>
+    </sub>
+    <sub name="Glossaries" link="skeltrackglossary.html">
+      <sub name="Glossary" link="go01.html"/>
+      <sub name="Annotation Glossary" link="annotation-glossary.html"/>
+    </sub>
+    <sub name="Index of all symbols" link="ix01.html"/>
+    <sub name="Index of deprecated symbols" link="ix02.html"/>
+    <sub name="License" link="license.html"/>
+  </chapters>
+  <functions>
+    <keyword type="struct" name="struct SkeltrackSkeleton" link="SkeltrackSkeleton.html#SkeltrackSkeleton-struct"/>
+    <keyword type="struct" name="struct SkeltrackSkeletonClass" link="SkeltrackSkeleton.html#SkeltrackSkeletonClass"/>
+    <keyword type="function" name="skeltrack_skeleton_new ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-new"/>
+    <keyword type="function" name="skeltrack_skeleton_track_joints ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints"/>
+    <keyword type="function" name="skeltrack_skeleton_track_joints_finish ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-finish"/>
+    <keyword type="function" name="skeltrack_skeleton_track_joints_sync ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-track-joints-sync"/>
+    <keyword type="function" name="skeltrack_skeleton_get_focus_point ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-get-focus-point"/>
+    <keyword type="function" name="skeltrack_skeleton_set_focus_point ()" link="SkeltrackSkeleton.html#skeltrack-skeleton-set-focus-point"/>
+    <keyword type="property" name="The &quot;dimension-reduction&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--dimension-reduction"/>
+    <keyword type="property" name="The &quot;enable-smoothing&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--enable-smoothing"/>
+    <keyword type="property" name="The &quot;extrema-sphere-radius&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--extrema-sphere-radius"/>
+    <keyword type="property" name="The &quot;graph-distance-threshold&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-distance-threshold"/>
+    <keyword type="property" name="The &quot;graph-minimum-number-nodes&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--graph-minimum-number-nodes"/>
+    <keyword type="property" name="The &quot;hands-minimum-distance&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--hands-minimum-distance"/>
+    <keyword type="property" name="The &quot;joints-persistency&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--joints-persistency"/>
+    <keyword type="property" name="The &quot;shoulders-arc-length&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-length"/>
+    <keyword type="property" name="The &quot;shoulders-arc-start-point&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-arc-start-point"/>
+    <keyword type="property" name="The &quot;shoulders-circumference-radius&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-circumference-radius"/>
+    <keyword type="property" name="The &quot;shoulders-search-step&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--shoulders-search-step"/>
+    <keyword type="property" name="The &quot;smoothing-factor&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--smoothing-factor"/>
+    <keyword type="property" name="The &quot;torso-minimum-number-nodes&quot; property" link="SkeltrackSkeleton.html#SkeltrackSkeleton--torso-minimum-number-nodes"/>
+    <keyword type="macro" name="SKELTRACK_JOINT_MAX_JOINTS" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-MAX-JOINTS:CAPS"/>
+    <keyword type="typedef" name="SkeltrackJointList" link="skeltrack-skeltrack-joint.html#SkeltrackJointList"/>
+    <keyword type="enum" name="enum SkeltrackJointId" link="skeltrack-skeltrack-joint.html#SkeltrackJointId"/>
+    <keyword type="struct" name="struct SkeltrackJoint" link="skeltrack-skeltrack-joint.html#SkeltrackJoint-struct"/>
+    <keyword type="function" name="skeltrack_joint_copy ()" link="skeltrack-skeltrack-joint.html#skeltrack-joint-copy"/>
+    <keyword type="function" name="skeltrack_joint_free ()" link="skeltrack-skeltrack-joint.html#skeltrack-joint-free"/>
+    <keyword type="function" name="skeltrack_joint_list_free ()" link="skeltrack-skeltrack-joint.html#skeltrack-joint-list-free"/>
+    <keyword type="function" name="skeltrack_joint_list_new ()" link="skeltrack-skeltrack-joint.html#skeltrack-joint-list-new"/>
+    <keyword type="function" name="skeltrack_joint_list_get_joint ()" link="skeltrack-skeltrack-joint.html#skeltrack-joint-list-get-joint"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_HEAD" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-HEAD:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_LEFT_SHOULDER" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-LEFT-SHOULDER:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_RIGHT_SHOULDER" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-RIGHT-SHOULDER:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_LEFT_ELBOW" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-LEFT-ELBOW:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_RIGHT_ELBOW" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-RIGHT-ELBOW:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_LEFT_HAND" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-LEFT-HAND:CAPS"/>
+    <keyword type="constant" name="SKELTRACK_JOINT_ID_RIGHT_HAND" link="skeltrack-skeltrack-joint.html#SKELTRACK-JOINT-ID-RIGHT-HAND:CAPS"/>
+  </functions>
+</book>
