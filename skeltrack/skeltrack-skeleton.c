@@ -3,9 +3,10 @@
  *
  * Skeltrack - A Free Software skeleton tracking library
  * Copyright (C) 2012 Igalia S.L.
+ * Copyright (C) 2013 Joaquim Rocha
  *
  * Authors:
- *  Joaquim Rocha <jrocha@igalia.com>
+ *  Joaquim Rocha <me@joaquimrocha.com>
  *  Eduardo Lima Mitev <elima@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
