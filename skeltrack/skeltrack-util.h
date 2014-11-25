@@ -81,10 +81,10 @@ void          free_node                        (Node *node,
 
 void          clean_nodes                      (GList *nodes);
 
-GList *       remove_nodes_with_label          (GList *nodes,
+GList *       remove_nodes_with_labels         (GList *nodes,
                                                 Node **node_matrix,
                                                 gint width,
-                                                Label *label);
+                                                GList *labels);
 
 Label *       get_lowest_index_label           (Label **neighbor_labels);
 
