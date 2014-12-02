@@ -448,6 +448,7 @@ new_label (gint index)
 void
 join_components_to_main (GList *labels,
                          Label *main_component_label,
+                         GList *labels_to_remove,
                          guint horizontal_max_distance,
                          guint depth_max_distance,
                          guint graph_distance_threshold)
@@ -463,6 +464,10 @@ join_components_to_main (GList *labels,
       GList *current_node, *nodes;
 
       label = (Label *) current_label->data;
+
+      if (g_list_find(labels_to_remove, label) != NULL)
+        continue;
+
       if (label == main_component_label)
         continue;
 
