@@ -81,10 +81,10 @@ void          free_node                        (Node *node,
 
 void          clean_nodes                      (GList *nodes);
 
-GList *       remove_nodes_with_label          (GList *nodes,
+GList *       remove_nodes_with_labels         (GList *nodes,
                                                 Node **node_matrix,
                                                 gint width,
-                                                Label *label);
+                                                GList *labels);
 
 Label *       get_lowest_index_label           (Label **neighbor_labels);
 
@@ -92,6 +92,7 @@ Label *       new_label                        (gint index);
 
 void          join_components_to_main          (GList *nodes,
                                                 Label *lowest_component_label,
+                                                GList *labels_to_remove,
                                                 guint horizontal_max_distance,
                                                 guint depth_max_distance,
                                                 guint graph_distance_threshold);

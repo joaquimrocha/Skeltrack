@@ -350,11 +350,33 @@ clean_nodes (GList *nodes)
     }
 }
 
+static gboolean
+label_in_label_list (Label *label_to_check,
+                     GList *labels)
+{
+  GList *current_label;
+
+  current_label = g_list_first (labels);
+  while (current_label != NULL)
+    {
+      Label *label = current_label->data;
+
+      if (label_to_check == label)
+        {
+          return TRUE;
+        }
+
+      current_label = g_list_next (current_label);
+    }
+
+  return FALSE;
+}
+
 GList *
-remove_nodes_with_label (GList *nodes,
+remove_nodes_with_labels (GList *nodes,
                          Node **node_matrix,
                          gint width,
-                         Label *label)
+                         GList *labels)
 {
   Node *node;
   GList *link_to_delete, *current_node;
@@ -362,18 +384,25 @@ remove_nodes_with_label (GList *nodes,
   current_node = g_list_first (nodes);
   while (current_node != NULL)
     {
+      gboolean remove_node;
       node = (Node *) current_node->data;
-      if (node->label == label)
-        {
-          link_to_delete = current_node;
-          current_node = g_list_next (current_node);
-          nodes = g_list_delete_link (nodes, link_to_delete);
-          node_matrix[width * node->j + node->i] = NULL;
-          free_node (node, TRUE);
-          continue;
-        }
+
+      remove_node = label_in_label_list (node->label, labels);
+
+      if (remove_node) {
+        link_to_delete = current_node;
+        current_node = g_list_next (current_node);
+        nodes = g_list_delete_link (nodes, link_to_delete);
+        node_matrix[width * node->j + node->i] = NULL;
+        free_node (node, TRUE);
+        continue;
+      }
+
       current_node = g_list_next (current_node);
     }
+
+  g_list_free_full(labels, (GDestroyNotify) free_label);
+
   return nodes;
 }
 
@@ -419,6 +448,7 @@ new_label (gint index)
 void
 join_components_to_main (GList *labels,
                          Label *main_component_label,
+                         GList *labels_to_remove,
                          guint horizontal_max_distance,
                          guint depth_max_distance,
                          guint graph_distance_threshold)
@@ -434,6 +464,10 @@ join_components_to_main (GList *labels,
       GList *current_node, *nodes;
 
       label = (Label *) current_label->data;
+
+      if (g_list_find(labels_to_remove, label) != NULL)
+        continue;
+
       if (label == main_component_label)
         continue;
 
