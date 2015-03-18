@@ -862,7 +862,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
       label->normalized_num_nodes =  g_list_length (current_nodes) *
                                      ((label->higher_z - label->lower_z)/2 +
                                      label->lower_z) *
-                                     (pow (DIMENSION_REDUCTION, 2)/2) /
+                                     (pow (priv->dimension_reduction, 2)/2) /
                                      1000000;
     }
 
@@ -1610,7 +1610,7 @@ track_joints (SkeltrackSkeleton *self)
                                             self->priv->previous_head,
                                             &distance);
           if (head != NULL &&
-              distance < GRAPH_DISTANCE_THRESHOLD)
+              distance < self->priv->distance_threshold)
             {
               can_be_head = check_if_node_can_be_head (self,
                                                        head,
