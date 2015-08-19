@@ -121,6 +121,21 @@ struct _SkeltrackSkeletonPrivate
   gfloat torso_minimum_number_nodes;
 
   SkeltrackJoint *previous_head;
+
+	Node* ext_a1;
+	Node* ext_a2;
+	Node* ext_b1;
+	Node* ext_b2;
+	Node* left_hand1;
+	Node* left_hand2;
+	Node* right_hand1;
+	Node* right_hand2;
+	Node* left_elbow1;
+	Node* left_elbow2;
+	Node* right_elbow1;
+	Node* right_elbow2;
+
+
 };
 
 /* Currently searches for head and hands */
@@ -1145,7 +1160,7 @@ get_extremas (SkeltrackSkeleton *self, Node *centroid)
           node->linked_nodes = g_list_prepend (node->linked_nodes, source);
           source = node;
           extremas = g_list_prepend (extremas, node);
-        }
+       }
     }
 
   if (self->priv->extrema_sphere_radius != 0)
@@ -1342,6 +1357,67 @@ identify_arm_extrema (gint *distances,
     }
 }
 
+int i = 0;
+Node* temp_hand = NULL;
+Node* left_hand1 = NULL;
+Node* left_hand2 = NULL;
+Node* right_hand1 = NULL;
+Node* right_hand2 = NULL;
+Node* left_elbow1 = NULL;
+Node* left_elbow2 = NULL;
+Node* right_elbow1 = NULL;
+Node* right_elbow2 = NULL;
+
+
+Node* 
+get_third_node(SkeltrackSkeleton *self,
+                     Node* first_node, 
+                     Node* second_node)
+{
+	Node* third_node;
+	Node* return_node;
+	third_node = g_slice_new0 (Node);
+	
+	if(first_node==NULL && second_node==NULL)
+		return NULL;
+	
+	
+	third_node->x = 2*(second_node->x) - (first_node->x);
+	third_node->y = 2*(second_node->y) - (first_node->y);
+	third_node->z = 2*(second_node->z) - (first_node->z);
+	third_node->linked_nodes = NULL;
+	
+	return_node = get_closest_node (self->priv->graph, third_node);
+	
+	g_slice_free (Node, third_node);
+	
+	return return_node;
+}
+	
+Node* ext_a1 = NULL;
+Node* ext_a2 = NULL;
+Node* ext_b1 = NULL;
+Node* ext_b2 = NULL;
+
+Node* 
+copy_node(Node* sender)
+{
+	Node* receiver;
+	if(sender==NULL)
+		return NULL;
+	
+	receiver = (Node*)malloc(sizeof(Node));
+	receiver->i = sender->i;
+	receiver->j = sender->j;
+	receiver->x = sender->x;
+	receiver->y = sender->y;
+	receiver->z = sender->z;
+	receiver->neighbors = sender->neighbors;
+	receiver->linked_nodes = sender->linked_nodes;
+	receiver->label = sender->label;
+	return receiver;
+}
+
 static void
 set_left_and_right_from_extremas (SkeltrackSkeleton *self,
                                   GList *extremas,
@@ -1390,6 +1466,98 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
             ext_b = node;
         }
     }
+	
+	ext_a1 = self->priv->ext_a1;
+	ext_a2 = self->priv->ext_a2;
+	ext_b1 = self->priv->ext_b1;
+	ext_b2 = self->priv->ext_b2;
+	
+	Node* temp_ext_a = NULL;
+	Node* temp_ext_b = NULL;
+	Node* temp_ext = NULL;
+	
+	if(ext_a1!=NULL && ext_a2!=NULL)
+		temp_ext_a = get_third_node(self,
+                               ext_a1,
+                               ext_a2);
+	
+	if(ext_b1!=NULL && ext_b2!=NULL)
+		temp_ext_b = get_third_node(self,
+                               ext_b1,
+                               ext_b2);
+	
+	if(ext_a1!=NULL && ext_a2!=NULL && ext_b1!=NULL && ext_b2!=NULL)
+	{
+  		if((get_distance(ext_a,ext_a2) > get_distance(ext_a,ext_b2)) && 
+  			(get_distance(ext_b,ext_b2) > get_distance(ext_b,ext_a2)))
+  		{
+  			temp_ext = ext_a;
+  			ext_a = ext_b;
+  			ext_b = temp_ext;
+  		}
+  		else if((get_distance(ext_a,ext_a2) > get_distance(ext_a,ext_b2)) && 
+  			(get_distance(ext_b,ext_b2) < get_distance(ext_b,ext_a2)))
+  		{
+  			ext_a = copy_node(temp_ext_a);
+  			ext_b = copy_node(temp_ext_b);
+  		}
+  		else if((get_distance(ext_a,ext_a2) < get_distance(ext_a,ext_b2)) && 
+  			(get_distance(ext_b,ext_b2) > get_distance(ext_b,ext_a2)))
+  		{
+  			ext_a = copy_node(temp_ext_a);
+  			ext_b = copy_node(temp_ext_b);
+  		}
+  		else
+  		{
+
+      }
+	}
+
+
+	if(ext_a1==NULL || ext_a2==NULL || ext_b1==NULL || ext_b2==NULL)
+	{
+		//printf("**************************************\n");
+	}
+	
+	
+	if(ext_a1!=NULL)
+		free(ext_a1);
+	
+	ext_a1 = copy_node(ext_a2);
+	self->priv->ext_a1 = ext_a1;
+	
+	if(ext_a2!=NULL)
+		free(ext_a2);
+
+	ext_a2 = copy_node(ext_a);
+	self->priv->ext_a2 = ext_a2;
+	
+	if(ext_b1!=NULL)
+		free(ext_b1);
+	
+	ext_b1 = copy_node(ext_b2);
+	self->priv->ext_b1 = ext_b1;
+	
+	if(ext_b2!=NULL)
+		free(ext_b2);
+	
+	ext_b2 = copy_node(ext_b);
+	self->priv->ext_b2 = ext_b2;
+	
+	
+	if(ext_a1==NULL)
+		printf("a1 null\n");
+	
+	if(ext_a2==NULL)
+		printf("a2 null\n");
+	
+	if(ext_b1==NULL)
+		printf("b1 null\n");
+	
+	if(ext_b2==NULL)
+		printf("b2 null\n");
+	
+	
 
   if (head == NULL)
     return;
@@ -1483,13 +1651,19 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
                         &elbow_extrema,
                         &hand_extrema);
 
+ 
+	left_hand1 = self->priv->left_hand1;							
+	left_hand2 = self->priv->left_hand2;
+	left_elbow1 = self->priv->left_elbow1;							
+	left_elbow2 = self->priv->left_elbow2; 
+ 
   /* Two left extremas */
   if (index_left == 1)
     {
       if (hand_extrema == NULL)
         {
-          hand_extrema = left_extrema[1];
-          elbow_extrema = left_extrema[0];
+           hand_extrema = get_third_node(self, left_hand1, left_hand2);
+           elbow_extrema = left_extrema[0];
         }
       else
         {
@@ -1502,6 +1676,40 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
                        elbow_extrema,
                        SKELTRACK_JOINT_ID_LEFT_ELBOW,
                        self->priv->dimension_reduction);
+
+  if (elbow_extrema == NULL && left_elbow1!=NULL && left_elbow2!=NULL)
+  	hand_extrema = get_third_node(self, left_elbow1, left_elbow2);
+   
+  if(elbow_extrema!=NULL && left_elbow1!=NULL && left_elbow2!=NULL && get_distance(left_elbow2,elbow_extrema) > GRAPH_DISTANCE_THRESHOLD)
+    	 elbow_extrema = get_third_node(self, left_elbow1, left_elbow2);
+   
+  if(left_elbow1!=NULL)
+    	free(left_elbow1);
+
+  left_elbow1 = copy_node(left_elbow2);
+  self->priv->left_elbow1 = left_elbow1;
+    
+  if(left_elbow2!=NULL)
+    	free(left_elbow2);
+    
+  left_elbow2 = copy_node(elbow_extrema);
+  self->priv->left_elbow2 = left_elbow2;
+   
+  if (hand_extrema == NULL && left_hand1!=NULL && left_hand2!=NULL)
+   	  hand_extrema = get_third_node(self, left_hand1, left_hand2);
+   
+  if(left_hand1!=NULL)
+  	free(left_hand1);
+
+  left_hand1 = copy_node(left_hand2);
+  self->priv->left_hand1 = left_hand1;
+  
+  if(left_hand2!=NULL)
+  	free(left_hand2);
+  
+  left_hand2 = copy_node(hand_extrema);
+  self->priv->left_hand2 = left_hand2;
+   
   set_joint_from_node (joints,
                        hand_extrema,
                        SKELTRACK_JOINT_ID_LEFT_HAND,
@@ -1518,12 +1726,16 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
                         &elbow_extrema,
                         &hand_extrema);
 
+  right_hand1 = self->priv->right_hand1;							
+	right_hand2 = self->priv->right_hand2;
+	right_elbow1 = self->priv->right_elbow1;							
+	right_elbow2 = self->priv->right_elbow2; 
   /* Two right extremas */
   if (index_right == 1)
     {
       if (hand_extrema == NULL)
         {
-          hand_extrema = right_extrema[1];
+           hand_extrema = get_third_node(self, right_hand1, right_hand2);			//!!!
           elbow_extrema = right_extrema[0];
         }
       else
@@ -1537,6 +1749,40 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
                        elbow_extrema,
                        SKELTRACK_JOINT_ID_RIGHT_ELBOW,
                        self->priv->dimension_reduction);
+  
+  if (elbow_extrema == NULL && right_elbow1!=NULL && right_elbow2!=NULL)
+	   hand_extrema = get_third_node(self, right_elbow1, right_elbow2);
+  
+  if(elbow_extrema!=NULL && right_elbow1!=NULL && right_elbow2!=NULL && get_distance(right_elbow2,elbow_extrema) > GRAPH_DISTANCE_THRESHOLD)
+  	 elbow_extrema = get_third_node(self, right_elbow1, right_elbow2);
+
+  if(right_elbow1!=NULL)
+  	free(right_elbow1);
+
+  right_elbow1 = copy_node(right_elbow2);
+  self->priv->right_elbow1 = right_elbow1;
+  
+  if(right_elbow2!=NULL)
+  	free(right_elbow2);
+
+  right_elbow2 = copy_node(elbow_extrema);
+  self->priv->right_elbow2 = right_elbow2;
+  
+  if (hand_extrema == NULL && right_hand1!=NULL && right_hand2!=NULL)
+   	hand_extrema = get_third_node(self, right_hand1, right_hand2);
+ 
+  if(right_hand1!=NULL)
+  	free(right_hand1);
+  
+  right_hand1 = copy_node(right_hand2);
+  self->priv->right_hand1 = right_hand1;
+  
+  if(right_hand2!=NULL)
+  	free(right_hand2);
+  
+  right_hand2 = copy_node(hand_extrema);
+  self->priv->right_hand2 = right_hand2;
+  
   set_joint_from_node (joints,
                        hand_extrema,
                        SKELTRACK_JOINT_ID_RIGHT_HAND,
@@ -1551,6 +1797,8 @@ set_left_and_right_from_extremas (SkeltrackSkeleton *self,
   g_slice_free1 (matrix_size * sizeof (gint), dist_left_b);
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_a);
   g_slice_free1 (matrix_size * sizeof (gint), dist_right_b);
+  
+  
 }
 
 static Node *
