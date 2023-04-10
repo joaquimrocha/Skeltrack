@@ -702,6 +702,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
   Node *node;
   GList *nodes = NULL;
   GList *labels = NULL;
+  GList *labels_to_remove = NULL;
   GList *current_label;
   GList *current_node;
   Label *main_component_label = NULL;
@@ -880,15 +881,11 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
          the minimum required */
       if (g_list_length (label->nodes) < priv->min_nr_nodes)
         {
-          nodes = remove_nodes_with_label (nodes,
-                                           priv->node_matrix,
-                                           priv->buffer_width,
-                                           label);
+          labels_to_remove = g_list_prepend (labels_to_remove, label);
 
           GList *link = current_label;
           current_label = g_list_next (current_label);
           labels = g_list_delete_link (labels, link);
-          free_label (label);
           continue;
         }
 
@@ -899,6 +896,7 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
     {
       join_components_to_main (labels,
                                main_component_label,
+                               labels_to_remove,
                                priv->distance_threshold,
                                priv->hands_minimum_distance,
                                priv->distance_threshold);
@@ -916,15 +914,11 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
 
           if (label->bridge_node == NULL)
             {
-              nodes = remove_nodes_with_label (nodes,
-                                               priv->node_matrix,
-                                               priv->buffer_width,
-                                               label);
+              labels_to_remove = g_list_prepend (labels_to_remove, label);
 
               GList *link = current_label;
               current_label = g_list_next (current_label);
               labels = g_list_delete_link (labels, link);
-              free_label (label);
               continue;
             }
 
@@ -938,6 +932,11 @@ make_graph (SkeltrackSkeleton *self, GList **label_list)
 
       priv->main_component = main_component_label->nodes;
     }
+
+  nodes = remove_nodes_with_labels (nodes,
+                                    priv->node_matrix,
+                                    priv->buffer_width,
+                                    labels_to_remove);
 
   *label_list = labels;
 
